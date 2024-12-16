@@ -1,59 +1,37 @@
 # Define the URL of the latest script version on GitHub
 $scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
 
-# Define the path to the current script
-$scriptPath = $MyInvocation.MyCommand.Path
+# Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
+$defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
 
-# Download the latest script version
+# Search for the game install folder by looking for start_offthegrid.exe
+$gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
+    Test-Path -Path (Join-Path -Path $_.FullName -ChildPath "start_offthegrid.exe")
+} | Select-Object -First 1 -ExpandProperty FullName
+
+if (-not $gameInstallFolder) {
+    Write-Output "Game install folder not found. Please ensure the game is installed correctly."
+    exit
+}
+
+# Define the path to the script in the game install folder
+$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
+
+# Download the latest script version and save it to the game install folder
 try {
     $latestScript = Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing
     if ($latestScript.StatusCode -eq 200) {
         $latestContent = $latestScript.Content
 
-        # Replace the current script with the latest version
-        Set-Content -Path $scriptPath -Value $latestContent -Force
-        Write-Output "The script has been updated to the latest version."
+        # Save the downloaded script to the game install folder
+        Set-Content -Path $offlineScriptPath -Value $latestContent -Force
+        Write-Output "The script has been updated to the latest version and saved to the game install folder."
     } else {
         Write-Output "Failed to download the latest script version. Status code: $($latestScript.StatusCode)"
     }
 } catch {
     Write-Output "An error occurred while trying to update the script: $_"
 }
-
-# Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
-$defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
-
-# Construct the path to the Off The Grid game install folder
-$gameInstallFolder = Join-Path -Path $defaultInstallLocation -ChildPath "OffTheGrid"
-
-# Construct the path to the start_offthegrid.exe executable
-$executablePath = Join-Path -Path $gameInstallFolder -ChildPath "start_offthegrid.exe"
-
-# Check if the executable exists and print the result
-if (Test-Path $executablePath) {
-    Write-Host "Off The Grid game install folder found: $gameInstallFolder"
-    Write-Host "Executable exists: $executablePath"
-    
-    # Navigate to the game folder subdirectory G01\Content\Movies
-    $moviesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Content\Movies"
-    
-    # Delete specified .mp4 files in the Movies folder and display output for each file being deleted
-    foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
-        $filesToDelete = Get-ChildItem -Path $moviesPath -Filter $pattern
-        foreach ($file in $filesToDelete) {
-            Remove-Item -Path $file.FullName -Force
-            Write-Host "Deleted file: $($file.FullName)"
-        }
-    }
-} else {
-    Write-Host "Off The Grid game install folder not found or executable does not exist."
-}
-
-# === Start of Self-Copy and Shortcut Creation ===
-
-# Copy the script to the game install folder
-$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
-Copy-Item -Path $scriptPath -Destination $offlineScriptPath -Force
 
 # Create a shortcut on the desktop
 $desktop = [System.Environment]::GetFolderPath('Desktop')
@@ -75,7 +53,6 @@ if (-not (Test-Path -Path $shortcutPath)) {
 } else {
     Write-Output "Shortcut already exists on the desktop."
 }
-
 # === End of Self-Copy and Shortcut Creation ===
 
 # Define the Epic Games launch command as a URI
