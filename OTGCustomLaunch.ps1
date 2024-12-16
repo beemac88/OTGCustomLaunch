@@ -1,5 +1,5 @@
 # Define the URL of the latest script version on GitHub
-$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGLaunchEpic.ps1"
+$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
 
 # Define the path to the current script
 $scriptPath = $MyInvocation.MyCommand.Path
