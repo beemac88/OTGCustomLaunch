@@ -1,3 +1,25 @@
+# Define the URL of the latest script version on GitHub
+$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGLaunchEpicV3.ps1"
+
+# Define the path to the current script
+$scriptPath = $MyInvocation.MyCommand.Path
+
+# Download the latest script version
+try {
+    $latestScript = Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing
+    if ($latestScript.StatusCode -eq 200) {
+        $latestContent = $latestScript.Content
+
+        # Replace the current script with the latest version
+        Set-Content -Path $scriptPath -Value $latestContent -Force
+        Write-Output "The script has been updated to the latest version."
+    } else {
+        Write-Output "Failed to download the latest script version. Status code: $($latestScript.StatusCode)"
+    }
+} catch {
+    Write-Output "An error occurred while trying to update the script: $_"
+}
+
 # Define the path to the JSON file
 $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
 
