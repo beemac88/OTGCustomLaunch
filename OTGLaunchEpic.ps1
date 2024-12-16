@@ -50,6 +50,7 @@ if (Test-Path $executablePath) {
 }
 
 # === Start of Self-Copy and Shortcut Creation ===
+
 # Copy the script to the game install folder
 $offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 Copy-Item -Path $scriptPath -Destination $offlineScriptPath -Force
@@ -57,23 +58,24 @@ Copy-Item -Path $scriptPath -Destination $offlineScriptPath -Force
 # Create a shortcut on the desktop
 $desktop = [System.Environment]::GetFolderPath('Desktop')
 $shortcutPath = Join-Path -Path $desktop -ChildPath "OTG Custom Launch.lnk"
+$targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
+$arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
 
 if (-not (Test-Path -Path $shortcutPath)) {
-    $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
-    $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
-    
     # Create a WScript.Shell COM object to create the shortcut
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $targetPath
     $shortcut.Arguments = $arguments
     $shortcut.IconLocation = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
+    $shortcut.WorkingDirectory = $gameInstallFolder
     $shortcut.Save()
 
     Write-Output "Offline copy of the script created and shortcut added to the desktop."
 } else {
     Write-Output "Shortcut already exists on the desktop."
 }
+
 # === End of Self-Copy and Shortcut Creation ===
 
 # Define the Epic Games launch command as a URI
