@@ -55,6 +55,65 @@ if (-not (Test-Path -Path $shortcutPath)) {
 }
 # === End of Self-Copy and Shortcut Creation ===
 
+# === Custom Section for AW3423DWF Monitor ===
+# Check for the presence of the AW3423DWF monitor
+$monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach-Object {
+    [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName -ne 0)
+} | Where-Object { $_ -eq "AW3423DWF" }
+
+if ($monitor) {
+    Write-Output "AW3423DWF monitor detected. Running custom section of the script."
+
+    # Define the path to the JSON file
+    $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
+
+    # Desired ScreenResolution
+    $desiredScreenResolution = @{
+        x = 3440
+        y = 1440
+    }
+
+    # Desired UIAspectRatio
+    $desiredUIAspectRatio = 1.7777777910232544
+
+    # Read the JSON file as a string
+    $jsonContent = Get-Content -Path $jsonFilePath -Raw
+
+    # Ensure the "WindowMode" value is added before "ScreenResolution"
+    if ($jsonContent -notmatch '"WindowMode":\s*\d') {
+        $jsonContent = $jsonContent -replace '^\{', "{`r`n`t`"WindowMode`": 1,"
+    } else {
+        $jsonContent = $jsonContent -replace '"WindowMode":\s*\d+', '"WindowMode": 1'
+    }
+
+    # Ensure the "ScreenResolution" value is added between "WindowMode" and "DisplayIndex"
+    if ($jsonContent -notmatch '"ScreenResolution":\s*\{') {
+        $jsonContent = $jsonContent -replace '"WindowMode": 1', "`t`"WindowMode`": 1,`r`n`t`"ScreenResolution`":{`"x`": 3440,`"y`": 1440},"
+    } else {
+        $jsonContent = $jsonContent -replace '"ScreenResolution":\s*\{\s*"x":\s*\d+,\s*"y":\s*\d+\s*\}', '"ScreenResolution":{"x": 3440,"y": 1440}'
+    }
+
+    # Ensure the "UIAspectRatio" value is added between "RotationAccelerationMultiplierHipFirePitch" and "bShowComparisonTooltip"
+    if ($jsonContent -notmatch '"UIAspectRatio":\s*\d+\.\d+') {
+        $jsonContent = $jsonContent -replace '(("RotationAccelerationMultiplierHipFirePitch":\s*\d+\.\d+,))', "`$1`r`n`t`"UIAspectRatio`": 1.7777777910232544,"
+    }
+
+    # Ensure the "DisplayIndex" value is added after "ScreenResolution"
+    if ($jsonContent -notmatch '"DisplayIndex":\s*\d') {
+        $jsonContent = $jsonContent -replace '}\s*,\s*"AntiAliasingQuality"', "},`r`n`t`"DisplayIndex`": 1,`r`n`t`"AntiAliasingQuality`""
+    } else {
+        $jsonContent = $jsonContent -replace '"DisplayIndex":\s*\d+', '"DisplayIndex": 1'
+    }
+
+    # Write the updated JSON content back to the file without a trailing newline
+    $jsonContent | Set-Content -Path $jsonFilePath -NoNewline
+
+    Write-Output "The JSON file has been updated successfully."
+} else {
+    Write-Output "AW3423DWF monitor not detected. Skipping custom section of the script."
+}
+# === End of Custom Section for AW3423DWF Monitor ===
+
 # Define the Epic Games launch command as a URI
 $launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
 
