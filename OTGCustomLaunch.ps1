@@ -41,7 +41,13 @@ try {
 
         # Save the downloaded script to the game install folder
         Set-Content -Path $offlineScriptPath -Value $latestContent -Force
-        Write-Output "The script has been updated to the latest version and saved to the game install folder."
+        
+        # Get the file information
+        $fileInfo = Get-Item -Path $offlineScriptPath
+        $filePath = $fileInfo.FullName
+        $fileDateModified = $fileInfo.LastWriteTime
+
+        Write-Output "$filePath updated as of $fileDateModified"
     } else {
         Write-Output "Failed to download the latest script version. Status code: $($latestScript.StatusCode)"
     }
@@ -51,7 +57,8 @@ try {
 
 # Create a shortcut on the desktop
 $desktop = [System.Environment]::GetFolderPath('Desktop')
-$shortcutPath = Join-Path -Path $desktop -ChildPath "OTG Custom Launch.lnk"
+$shortcutName = "OTG Custom Launch.lnk"
+$shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
 $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
 $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
 
@@ -65,11 +72,10 @@ if (-not (Test-Path -Path $shortcutPath)) {
     $shortcut.WorkingDirectory = $gameInstallFolder
     $shortcut.Save()
 
-    Write-Output "Offline copy of the script created and shortcut added to the desktop."
+    Write-Output "Desktop shortcut name $shortcutName"
 } else {
-    Write-Output "Shortcut already exists on the desktop."
+    Write-Output "Shortcut already exists on the desktop: $shortcutName"
 }
-# === End of Self-Copy and Shortcut Creation ===
 
 # === Custom Section for AW3423DWF Monitor ===
 # Check for the presence of the AW3423DWF monitor
