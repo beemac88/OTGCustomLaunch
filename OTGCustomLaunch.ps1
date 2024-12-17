@@ -81,7 +81,7 @@ if ($monitor) {
     Write-Output "AW3423DWF monitor detected. Running custom section of the script."
     
     # Adjust wait time for AW3423DWF monitor
-    $waitTime = 22
+    $waitTime = 21
 
     # Define the path to the JSON file
     $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
