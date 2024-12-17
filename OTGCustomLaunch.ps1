@@ -1,6 +1,9 @@
 # Define the URL of the latest script version on GitHub
 $scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
 
+# Default wait time
+$waitTime = 25
+
 # Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
 $defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
 
@@ -63,6 +66,9 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 
 if ($monitor) {
     Write-Output "AW3423DWF monitor detected. Running custom section of the script."
+    
+    # Adjust wait time for AW3423DWF monitor
+    $waitTime = 22
 
     # Define the path to the JSON file
     $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
@@ -148,7 +154,7 @@ function Set-ForegroundWindowByGameProcess {
             $shell.AppActivate($partialTitle)
             Start-Sleep -Milliseconds 100 # Small delay to ensure AppActivate is processed
             $shell.SendKeys('%') # Send Alt key to bring the window to the foreground
-			$shell.AppActivate($partialTitle)
+            $shell.AppActivate($partialTitle)
             Start-Sleep -Milliseconds 100 # Sleep second time
             $shell.SendKeys('%') # Send Alt key second time
             $shell.AppActivate($partialTitle)
