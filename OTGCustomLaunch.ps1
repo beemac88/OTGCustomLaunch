@@ -15,8 +15,21 @@ $gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Rec
 if (-not $gameInstallFolder) {
     Write-Output "Game install folder not found. Please ensure the game is installed correctly."
     exit
+} else {
+    Write-Output "Game install folder found: $gameInstallFolder"
 }
 
+# Navigate to the game folder subdirectory G01\Content\Movies
+$moviesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Content\Movies"
+
+# Delete specified .mp4 files in the Movies folder and display output for each file being deleted
+foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
+    $filesToDelete = Get-ChildItem -Path $moviesPath -Filter $pattern
+    foreach ($file in $filesToDelete) {
+        Remove-Item -Path $file.FullName -Force
+        Write-Host "Deleted file: $($file.FullName)"
+    }
+}
 # Define the path to the script in the game install folder
 $offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 
