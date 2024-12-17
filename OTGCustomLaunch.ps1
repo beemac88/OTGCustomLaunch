@@ -145,8 +145,8 @@ while (-not (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue)) 
     Start-Sleep -Seconds 1
 }
 
-# Wait for an additional 23 seconds after the game process has started with a countdown timer
-for ($i = 23; $i -gt 0; $i--) {
+# Wait for the specified seconds after the game process has started with a countdown timer
+for ($i = $waitTime; $i -gt 0; $i--) {
     Write-Host "Waiting for $i seconds..."
     Start-Sleep -Seconds 1
 }
