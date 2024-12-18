@@ -61,6 +61,7 @@ $shortcutName = "OTG Custom Launch.lnk"
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
 $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
 $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
+$iconPath = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
 $workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
 
 # Create a WScript.Shell COM object to create the shortcut
@@ -68,15 +69,21 @@ $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $targetPath
 $shortcut.Arguments = $arguments
-$shortcut.IconLocation = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
+$shortcut.IconLocation = $iconPath
 $shortcut.WorkingDirectory = $workingDirectory
 $shortcut.Save()
 
-# Check if the shortcut was newly created or updated
+# Output message
+$shortcutNameWithoutExt = $shortcutName -replace '\.lnk$', ''
+
 if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
-    Write-Host "Desktop shortcut `"$($shortcutName -replace '\.lnk$', '')`" -ForegroundColor Yellow "created on Desktop"
+    Write-Host "Desktop shortcut " -NoNewline
+    Write-Host $shortcutNameWithoutExt -ForegroundColor Yellow -NoNewline
+    Write-Host " created on Desktop."
 } else {
-    Write-Host "Desktop shortcut `"$($shortcutName -replace '\.lnk$', '')`" -ForegroundColor Yellow "Desktop shortcut has been updated"
+    Write-Host "Desktop shortcut " -NoNewline
+    Write-Host $shortcutNameWithoutExt -ForegroundColor Yellow -NoNewline
+    Write-Host " has been updated."
 }
 
 # === Custom Section for AW3423DWF Monitor ===
@@ -136,8 +143,6 @@ if ($monitor) {
     $jsonContent | Set-Content -Path $jsonFilePath -NoNewline
 
     Write-Output "The JSON file has been updated successfully."
-} else {
-    Write-Output "AW3423DWF monitor not detected. Skipping custom section of the script."
 }
 # === End of Custom Section for AW3423DWF Monitor ===
 
