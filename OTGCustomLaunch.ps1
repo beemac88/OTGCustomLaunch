@@ -61,6 +61,7 @@ $shortcutName = "OTG Custom Launch.lnk"
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
 $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
 $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
+$workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
 
 if (-not (Test-Path -Path $shortcutPath)) {
     # Create a WScript.Shell COM object to create the shortcut
@@ -69,7 +70,7 @@ if (-not (Test-Path -Path $shortcutPath)) {
     $shortcut.TargetPath = $targetPath
     $shortcut.Arguments = $arguments
     $shortcut.IconLocation = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
-    $shortcut.WorkingDirectory = $gameInstallFolder
+    $shortcut.WorkingDirectory = $workingDirectory
     $shortcut.Save()
 
     Write-Output "Desktop shortcut name $shortcutName"
