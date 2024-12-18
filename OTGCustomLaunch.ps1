@@ -31,6 +31,7 @@ foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
         Write-Host "Deleted file: $($file.FullName)"
     }
 }
+
 # Define the path to the script in the game install folder
 $offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 
@@ -49,11 +50,20 @@ try {
         $fileDateModified = $fileInfo.LastWriteTime
 
         Write-Output "$filePath updated as of $fileDateModified"
+
+        # Restart script if the file was modified more than 30 seconds ago
+        if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
+            Write-Output "Restarting script to execute the latest version..."
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$filePath`""
+            exit
+        }
     } else {
         Write-Output "Failed to download the latest script version. Status code: $($latestScript.StatusCode)"
+        Start-Sleep -Seconds 10
     }
 } catch {
     Write-Output "An error occurred while trying to update the script: $_"
+    Start-Sleep -Seconds 10
 }
 
 # Create or overwrite a shortcut on the desktop
