@@ -55,7 +55,7 @@ try {
     Write-Output "An error occurred while trying to update the script: $_"
 }
 
-# Create a shortcut on the desktop
+# Create or overwrite a shortcut on the desktop
 $desktop = [System.Environment]::GetFolderPath('Desktop')
 $shortcutName = "OTG Custom Launch.lnk"
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
@@ -63,19 +63,20 @@ $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\Sys
 $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
 $workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
 
-if (-not (Test-Path -Path $shortcutPath)) {
-    # Create a WScript.Shell COM object to create the shortcut
-    $shell = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $targetPath
-    $shortcut.Arguments = $arguments
-    $shortcut.IconLocation = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
-    $shortcut.WorkingDirectory = $workingDirectory
-    $shortcut.Save()
+# Create a WScript.Shell COM object to create the shortcut
+$shell = New-Object -ComObject WScript.Shell
+$shortcut = $shell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath = $targetPath
+$shortcut.Arguments = $arguments
+$shortcut.IconLocation = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
+$shortcut.WorkingDirectory = $workingDirectory
+$shortcut.Save()
 
-    Write-Output "Desktop shortcut name $shortcutName"
+# Check if the shortcut was newly created or updated
+if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
+    Write-Host "Desktop shortcut `"$($shortcutName -replace '\.lnk$', '')`" -ForegroundColor Yellow "created on Desktop"
 } else {
-    Write-Output "Shortcut already exists on the desktop: $shortcutName"
+    Write-Host "Desktop shortcut `"$($shortcutName -replace '\.lnk$', '')`" -ForegroundColor Yellow "Desktop shortcut has been updated"
 }
 
 # === Custom Section for AW3423DWF Monitor ===
