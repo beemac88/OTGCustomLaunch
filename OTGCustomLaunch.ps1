@@ -14,6 +14,7 @@ $gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Rec
 
 if (-not $gameInstallFolder) {
     Write-Output "Game install folder not found. Please ensure the game is installed correctly."
+    pause
     exit
 } else {
     Write-Output "Game install folder found: $gameInstallFolder"
