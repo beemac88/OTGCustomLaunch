@@ -161,6 +161,8 @@ for ($i = $waitTime; $i -gt 0; $i--) {
 }
 
 # Function to set the foreground window by dynamically retrieved title from game process name
+$activateReps = 2 # Number of repetitions for AppActivate/Start-Sleep/SendKeys
+$escKeyPressReps = 4 # Number of ESC key presses
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
@@ -173,15 +175,11 @@ function Set-ForegroundWindowByGameProcess {
 
         if ($partialTitle) {
             $shell = New-Object -ComObject "WScript.Shell"
-            $shell.AppActivate($partialTitle)
-            Start-Sleep -Milliseconds 100 # Small delay to ensure AppActivate is processed
-            $shell.SendKeys('%') # Send Alt key to bring the window to the foreground
-            $shell.AppActivate($partialTitle)
-            Start-Sleep -Milliseconds 100 # Sleep second time
-            $shell.SendKeys('%') # Send Alt key second time
-            $shell.AppActivate($partialTitle)
-            Start-Sleep -Milliseconds 100 # Sleep third time
-            $shell.SendKeys('%') # Send Alt key third time
+            for ($i = 0; $i -lt $activateReps; $i++) {
+                $shell.AppActivate($partialTitle)
+                Start-Sleep -Milliseconds 100 # Small delay to ensure AppActivate is processed
+                $shell.SendKeys('%') # Send Alt key to bring the window to the foreground
+            }
             Write-Host "Window '$partialTitle' should now be in the foreground."
         } else {
             Write-Host "No window title found for process '$gameProcessName'."
@@ -194,14 +192,15 @@ function Set-ForegroundWindowByGameProcess {
 # Use the function to set the window with a dynamically retrieved title to the foreground
 Set-ForegroundWindowByGameProcess -gameProcessName $gameProcessName
 
-# Simulate pressing the ESC key twice with a 250ms delay prior and in between
-Start-Sleep -Milliseconds 250
+# Add-Type for SendKeys
 Add-Type -AssemblyName 'System.Windows.Forms'
-Write-Host "Simulating ESC key press..."
-[System.Windows.Forms.SendKeys]::SendWait("{ESC}")
-Start-Sleep -Milliseconds 250
-Write-Host "Simulating ESC key press again..."
-[System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+
+# Simulate pressing the ESC key multiple times with a 250ms delay prior and in between
+for ($i = 0; $i -lt $escKeyPressReps; $i++) {
+    Start-Sleep -Milliseconds 250
+    Write-Host "Simulating ESC key press..."
+    [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
+}
 
 Write-Output "The game should've skipped the intro videos."
 # Wait for 5 seconds to allow reading the console output
