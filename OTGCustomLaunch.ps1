@@ -2,7 +2,7 @@
 $scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
 
 # Default wait time
-$waitTime = 25
+$waitTime = 30
 
 # Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
 $defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
