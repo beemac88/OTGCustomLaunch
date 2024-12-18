@@ -77,13 +77,11 @@ $shortcut.Save()
 $shortcutNameWithoutExt = $shortcutName -replace '\.lnk$', ''
 
 if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
-    Write-Host "Desktop shortcut " -NoNewline
     Write-Host $shortcutNameWithoutExt -ForegroundColor Yellow -NoNewline
-    Write-Host " created on Desktop."
+    Write-Host " shortcut created on Desktop."
 } else {
-    Write-Host "Desktop shortcut " -NoNewline
     Write-Host $shortcutNameWithoutExt -ForegroundColor Yellow -NoNewline
-    Write-Host " has been updated."
+    Write-Host " shortcut updated on Desktop."
 }
 
 # === Custom Section for AW3423DWF Monitor ===
