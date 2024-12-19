@@ -171,7 +171,7 @@ for ($i = $waitTime; $i -gt 0; $i--) {
 }
 
 # Function to set the foreground window by dynamically retrieved title from game process name
-$activateReps = 2 # Number of repetitions for AppActivate/Start-Sleep/SendKeys
+$activateReps = 3 # Number of repetitions for AppActivate/Start-Sleep/SendKeys
 $escKeyPressReps = 4 # Number of ESC key presses
 function Set-ForegroundWindowByGameProcess {
     param (
