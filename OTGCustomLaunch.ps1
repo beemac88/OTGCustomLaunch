@@ -58,12 +58,12 @@ try {
         $newFilePath = $newFileInfo.FullName
         $newFileDateModified = $newFileInfo.LastWriteTime
 
-        Write-Output "$newFilePath updated as of " -NoNewLine; Write-Host $newFileDateModified -ForegroundColor Yellow
+        Write-Host "$newFilePath updated as of " -NoNewline; Write-Host $newFileDateModified -ForegroundColor Yellow
 
         # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
             Write-Host "Restarting script to execute the latest version as of " -NoNewline; Write-Host $fileDateModified -ForegroundColor Yellow
-            Start-Sleep -Seconds 1
+            Start-Sleep -Seconds 5
             Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
             exit
         }
