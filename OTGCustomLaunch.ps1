@@ -129,7 +129,7 @@ if ($monitor) {
         Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
         
         # Output the names of the files that were copied
-        Write-Host "Copied:" -NoNewline; Write-Host $backupFilePath -ForegroundColor Yellow -NoNewline; Write-Host " to:" -NoNewline; Write-Host $jsonFilePath -ForegroundColor Yellow
+        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host " to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
