@@ -130,11 +130,12 @@ if ($monitor) {
         
         <# Output the names of the files that were copied
         Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host "to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
+        commenting out this part as verbose should suffice#>
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
     }
-        commenting out this part as verbose should suffice#>
+    
     # Set a flag indicating the presence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $true
 } else {
