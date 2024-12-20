@@ -100,7 +100,7 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
-    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected..."
+    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected."
     
     # Adjust wait time for AW3423DWF monitor
     $waitTime = 19
@@ -120,7 +120,7 @@ if ($monitor) {
         Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
         
         # Output the names of the files that were copied
-        Write-Host "... copied:"; Write-Host $backupFilePath -ForegroundColor Yellow -NoNewline; Write-Host "to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
+        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host " to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
