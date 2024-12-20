@@ -17,7 +17,7 @@ if (-not $gameInstallFolder) {
     pause
     exit
 } else {
-    Write-Output "Game install folder found: $gameInstallFolder"
+    Write-Host "Game install folder found at " -NoNewline; Write-Host $gameInstallFolder -ForegroundColor Yellow
 }
 
 # Navigate to the game folder subdirectory G01\Content\Movies
@@ -63,7 +63,7 @@ try {
         # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
             Write-Host "Restarting script to execute the latest version as of " -NoNewline; Write-Host $fileDateModified -ForegroundColor Yellow
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 1
             Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
             exit
         }
