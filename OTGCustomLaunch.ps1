@@ -129,11 +129,17 @@ if ($monitor) {
         Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
         
         # Output the names of the files that were copied
-        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow -NoNewLine; Write-Host " to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
+        Write-Host "Copied:" -NoNewline; Write-Host $backupFilePath -ForegroundColor Yellow -NoNewline; Write-Host " to:" -NoNewline; Write-Host $jsonFilePath -ForegroundColor Yellow
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
     }
+
+    # Set a flag indicating the presence of the AW3423DWF monitor
+    $global:IsAW3423DWFMonitorPresent = $true
+} else {
+    # Set a flag indicating the absence of the AW3423DWF monitor
+    $global:IsAW3423DWFMonitorPresent = $false
 }
 # === End of Custom Section for AW3423DWF Monitor === #
 
@@ -276,5 +282,7 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 }
 
 Write-Output "The game should've skipped the intro videos."
+# Kill EpicGamesLauncher.exe if AW3423DWF monitor was detected
+if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" -Force }
 # Wait for 5 seconds to allow reading the console output
 Start-Sleep -Seconds 5
