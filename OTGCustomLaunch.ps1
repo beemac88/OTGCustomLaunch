@@ -109,7 +109,7 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
-    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected. " -NoNewLine
+    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected - " -NoNewLine
     
     # Adjust wait time for AW3423DWF monitor
     $waitTime = 19
@@ -125,16 +125,16 @@ if ($monitor) {
             throw [System.IO.FileNotFoundException]::new("Backup file not found")
         }
         
-        # Copy the backup file to overwrite the JSON file
-        Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
+        # Copy the backup file to overwrite the JSON file with verbose output
+        Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force -Verbose
         
-        # Output the names of the files that were copied
-        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host " to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
+        <# Output the names of the files that were copied
+        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host "to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
     }
-
+        commenting out this part as verbose should suffice#>
     # Set a flag indicating the presence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $true
 } else {
