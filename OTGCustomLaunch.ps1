@@ -54,6 +54,7 @@ try {
         # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
             Write-Output "Restarting script to execute the latest version..."
+	    Start-Sleep -Seconds 1
             Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$filePath`""
             exit
         }
@@ -99,7 +100,7 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
-    Write-Host "AW3423DWF monitor detected. " -NoNewLine
+    Write-Host "$monitor detected..."
     
     # Adjust wait time for AW3423DWF monitor
     $waitTime = 19
