@@ -51,12 +51,16 @@ try {
 
         Write-Output "$filePath updated as of $fileDateModified"
 
-        # Restart script if the file was modified more than 30 seconds ago
+        # Debug output to check the condition
+        Write-Output "Checking if the file was modified more than 30 seconds ago..."
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
+            Write-Output "Condition met. The file was modified more than 30 seconds ago."
             Write-Output "Restarting script to execute the latest version..."
-	    Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 5
             Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$filePath`""
             exit
+        } else {
+            Write-Output "Condition not met. The file was not modified more than 30 seconds ago."
         }
     } else {
         Write-Output "Failed to download the latest script version. Status code: $($latestScript.StatusCode)"
