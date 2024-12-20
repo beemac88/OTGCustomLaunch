@@ -283,6 +283,6 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 
 Write-Output "The game should've skipped the intro videos."
 # Kill EpicGamesLauncher.exe if AW3423DWF monitor was detected
-if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" -Force }
+#if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" -Force }
 # Wait for 5 seconds to allow reading the console output
 Start-Sleep -Seconds 5
