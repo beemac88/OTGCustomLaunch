@@ -99,10 +99,10 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
-    Write-Output "AW3423DWF monitor detected."
+    Write-Host "AW3423DWF monitor detected. " -NoNewLine
     
     # Adjust wait time for AW3423DWF monitor
-    $waitTime = 21
+    $waitTime = 19
 
     # Define the path to the JSON file and backup file
     $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
@@ -140,10 +140,15 @@ while (-not (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue)) 
 }
 
 # Wait for the specified seconds after the game process has started with a countdown timer
-$waitTime = 21
-for ($i = $waitTime; $i -gt 0; $i--) {
-    Write-Host "Waiting for $i seconds..."
-    Start-Sleep -Seconds 1
+if (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue) {
+    for ($i = $waitTime; $i -gt 0; $i--) {
+        Write-Host "Waiting for $i seconds..."
+        Start-Sleep -Seconds 1
+    }
+} else {
+    Write-Host "Process " -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow -NoNewline; Write-Host " not detected."
+	pause
+	exit
 }
 
 # Load the necessary assemblies for window manipulation
@@ -204,15 +209,15 @@ function Set-ForegroundWindowByGameProcess {
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
                 [User32]::SetForegroundWindow($gameWindowHandle)
                 Start-Sleep -Milliseconds 200 # Small delay to ensure SetForegroundWindow is processed
-                Write-Host "Window '$partialTitle' should now be in the foreground."
+                Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
-                Write-Host "Window '$partialTitle' is already in the foreground."
+                Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " is already in the foreground."
             }
         } else {
-            Write-Host "No window title found for process '$gameProcessName'."
+            Write-Host "No window title found for process " -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
         }
     } else {
-        Write-Host "No process found with name '$gameProcessName'."
+        Write-Host "No process found with name " -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
     }
 }
 
