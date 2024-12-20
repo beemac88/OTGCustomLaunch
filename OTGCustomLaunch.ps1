@@ -109,7 +109,7 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
-    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected - " -NoNewLine
+    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected."
     
     # Adjust wait time for AW3423DWF monitor
     $waitTime = 19
@@ -128,9 +128,6 @@ if ($monitor) {
         # Copy the backup file to overwrite the JSON file with verbose output
         Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force -Verbose
         
-        <# Output the names of the files that were copied
-        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host "to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
-        commenting out this part as verbose should suffice#>
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
@@ -284,6 +281,6 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 
 Write-Output "The game should've skipped the intro videos."
 # Kill EpicGamesLauncher.exe if AW3423DWF monitor was detected
-#if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" -Force }
+if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" -Force }
 # Wait for 5 seconds to allow reading the console output
 Start-Sleep -Seconds 5
