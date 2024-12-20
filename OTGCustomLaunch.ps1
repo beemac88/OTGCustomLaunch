@@ -58,12 +58,12 @@ try {
         $newFilePath = $newFileInfo.FullName
         $newFileDateModified = $newFileInfo.LastWriteTime
 
-        Write-Output "$newFilePath updated as of $newFileDateModified"
+        Write-Output "$newFilePath updated as of " -NoNewLine; Write-Host $newFileDateModified -ForegroundColor Yellow
 
         # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
             Write-Host "Restarting script to execute the latest version as of " -NoNewline; Write-Host $fileDateModified -ForegroundColor Yellow
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 1
             Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
             exit
         }
@@ -109,7 +109,7 @@ $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach
 } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
-    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected."
+    Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected. " -NoNewLine
     
     # Adjust wait time for AW3423DWF monitor
     $waitTime = 19
@@ -129,7 +129,7 @@ if ($monitor) {
         Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
         
         # Output the names of the files that were copied
-        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow; Write-Host "to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
+        Write-Host "Copied:"; Write-Host $backupFilePath -ForegroundColor Yellow -NoNewLine; Write-Host " to:"; Write-Host $jsonFilePath -ForegroundColor Yellow
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
         #Start-Sleep -Seconds 10
