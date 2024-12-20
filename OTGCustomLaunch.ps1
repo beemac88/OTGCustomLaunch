@@ -140,25 +140,56 @@ if ($monitor) {
 # Define the Epic Games launch command as a URI
 $launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
 
-# Launch the game using the Epic Games launch command as an internet shortcut
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c start $launchCommand"
+# Function to launch the game and monitor the process
+function Launch-And-MonitorGame {
+    param (
+        [int]$maxRetries = 3,
+        [int]$retryInterval = 5
+    )
 
-# Wait for the game process to start
-$gameProcessName = "G01Client-Win64-Shipping"
-while (-not (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue)) {
-    Start-Sleep -Seconds 1
+    $retries = 0
+
+    while ($retries -lt $maxRetries) {
+        Write-Host "Launching game (attempt $($retries + 1) of $maxRetries)..."
+        Start-Process -FilePath "cmd.exe" -ArgumentList "/c start $launchCommand"
+        
+        # Wait for the game process to start
+        $gameProcessName = "G01Client-Win64-Shipping"
+        while (-not (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue)) {
+            Start-Sleep -Seconds 1
+        }
+
+        # Monitor the game process during the countdown timer
+        for ($i = $waitTime; $i -gt 0; $i--) {
+            if (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue) {
+                Write-Host "Waiting for $i seconds..."
+                Start-Sleep -Seconds 1
+            } else {
+                Write-Host "Game process stopped prematurely. Retrying in $retryInterval seconds..."
+                Start-Sleep -Seconds $retryInterval
+                $retries++
+                break
+            }
+        }
+
+        if ($i -eq 0) {
+            return $true
+        }
+    }
+
+    Write-Host "Game process failed to start successfully after $maxRetries attempts." -ForegroundColor Red
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit
 }
 
-# Wait for the specified seconds after the game process has started with a countdown timer
-if (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue) {
-    for ($i = $waitTime; $i -gt 0; $i--) {
-        Write-Host "Waiting for $i seconds..."
-        Start-Sleep -Seconds 1
-    }
-} else {
-    Write-Host "Process " -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow -NoNewline; Write-Host " not detected."
-	pause
-	exit
+# Execute the function
+$success = Launch-And-MonitorGame
+
+if (-not $success) {
+    Write-Host "Exiting script due to repeated failure to launch the game." -ForegroundColor Red
+    pause
+    exit
 }
 
 # Load the necessary assemblies for window manipulation
