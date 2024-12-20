@@ -35,6 +35,15 @@ foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
 # Define the path to the script in the game install folder
 $offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 
+# Get the current file information before downloading the latest script
+$fileInfo = Get-Item -Path $offlineScriptPath -ErrorAction SilentlyContinue
+if ($fileInfo) {
+    $fileDateModified = $fileInfo.LastWriteTime
+} else {
+    # If the file doesn't exist, set a default old date to ensure the script runs the first time
+    $fileDateModified = (Get-Date).AddDays(-1)
+}
+
 # Download the latest script version and save it to the game install folder
 try {
     $latestScript = Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing
@@ -44,23 +53,19 @@ try {
         # Save the downloaded script to the game install folder
         Set-Content -Path $offlineScriptPath -Value $latestContent -Force
         
-        # Get the file information
-        $fileInfo = Get-Item -Path $offlineScriptPath
-        $filePath = $fileInfo.FullName
-        $fileDateModified = $fileInfo.LastWriteTime
+        # Get the new file information
+        $newFileInfo = Get-Item -Path $offlineScriptPath
+        $newFilePath = $newFileInfo.FullName
+        $newFileDateModified = $newFileInfo.LastWriteTime
 
-        Write-Output "$filePath updated as of $fileDateModified"
+        Write-Output "$newFilePath updated as of $newFileDateModified"
 
-        # Debug output to check the condition
-        Write-Output "Checking if the file was modified more than 30 seconds ago..."
+        # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
-            Write-Output "Condition met. The file was modified more than 30 seconds ago."
-            Write-Output "Restarting script to execute the latest version..."
+            Write-Host "Restarting script to execute the latest version as of " -NoNewline; Write-Host $fileDateModified -ForegroundColor Yellow
             Start-Sleep -Seconds 5
-            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$filePath`""
+            Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
             exit
-        } else {
-            Write-Output "Condition not met. The file was not modified more than 30 seconds ago."
         }
     } else {
         Write-Output "Failed to download the latest script version. Status code: $($latestScript.StatusCode)"
