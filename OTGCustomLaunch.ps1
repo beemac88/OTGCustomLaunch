@@ -238,18 +238,25 @@ function Get-WindowHandleByTitle {
 $escKeyPressReps = 2
 
 # Function to set the foreground window by dynamically retrieved title from game process name
+Write-Host "Game process name: $gameProcessName" -ForegroundColor Cyan
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
     )
 
-    $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
+    Write-Host "Setting foreground window for process: $gameProcessName" -ForegroundColor Cyan
 
+    $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
     if ($process) {
+        Write-Host "Process found: $($process.Name)" -ForegroundColor Green
+
         $partialTitle = $process.MainWindowTitle
+        Write-Host "Partial title: $partialTitle" -ForegroundColor Green
 
         if ($partialTitle) {
             $currentForegroundWindowTitle = Get-ForegroundWindowTitle
+            Write-Host "Current foreground window title: $currentForegroundWindowTitle" -ForegroundColor Green
+
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
                 [User32]::SetForegroundWindow($gameWindowHandle)
