@@ -92,7 +92,7 @@ if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
     Write-Host " shortcut exists on Desktop."
 }
 
-# === Custom Section for AW3423DWF Monitor ===
+<# === Custom Section for AW3423DWF Monitor ===
 # Check for the presence of the AW3423DWF monitor
 $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach-Object {
     [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName -ne 0)
@@ -150,7 +150,7 @@ if ($monitor) {
 
     Write-Output "The JSON file has been updated successfully."
 }
-# === End of Custom Section for AW3423DWF Monitor ===
+# === End of Custom Section for AW3423DWF Monitor === #>
 
 # Define the Epic Games launch command as a URI
 $launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
