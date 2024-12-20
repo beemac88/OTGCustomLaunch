@@ -139,6 +139,27 @@ if ($monitor) {
     # Set a flag indicating the absence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $false
 }
+
+# Function to refresh the system tray
+function Refresh-SystemTray {
+    Add-Type @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class User32 {
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SendMessageTimeout(
+            IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam,
+            uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
+    }
+    "@
+    $WM_SETTINGCHANGE = 0x001A
+    $HWND_BROADCAST = [IntPtr]0xffff
+    $SMTO_ABORTIFHUNG = 0x0002
+    $result = [IntPtr]::Zero
+
+    [User32]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [IntPtr]::Zero, [IntPtr]::Zero, $SMTO_ABORTIFHUNG, 1000, [ref] $result)
+}
+
 # === End of Custom Section for AW3423DWF Monitor === #
 
 # Define the Epic Games launch command as a URI
@@ -280,7 +301,11 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 }
 
 Write-Output "The game should've skipped the intro videos."
+
 # Kill EpicGamesLauncher.exe if AW3423DWF monitor was detected
-if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" -Force }
+if ($global:IsAW3423DWFMonitorPresent) { 
+    Stop-Process -Name "EpicGamesLauncher" 
+    Refresh-SystemTray
+}
 # Wait for 5 seconds to allow reading the console output
 Start-Sleep -Seconds 5
