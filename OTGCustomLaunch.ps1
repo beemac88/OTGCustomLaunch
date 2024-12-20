@@ -140,18 +140,20 @@ if ($monitor) {
     $global:IsAW3423DWFMonitorPresent = $false
 }
 
+# Add-Type for User32.dll functions
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public class User32 {
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SendMessageTimeout(
+        IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam,
+        uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
+}
+"@
+
 # Function to refresh the system tray
 function Refresh-SystemTray {
-    Add-Type @"
-    using System;
-    using System.Runtime.InteropServices;
-    public class User32 {
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr SendMessageTimeout(
-            IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam,
-            uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
-    }
-    "@
     $WM_SETTINGCHANGE = 0x001A
     $HWND_BROADCAST = [IntPtr]0xffff
     $SMTO_ABORTIFHUNG = 0x0002
