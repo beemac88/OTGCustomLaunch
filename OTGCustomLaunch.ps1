@@ -58,7 +58,7 @@ try {
         $newFilePath = $newFileInfo.FullName
         $newFileDateModified = $newFileInfo.LastWriteTime
 
-        Write-Host "$newFilePath updated as of " -NoNewline; Write-Host $newFileDateModified -ForegroundColor Yellow
+        Write-Host "" -NoNewline; Write-Host $newFilePath -ForegroundColor Yellow -NoNewline; Write-Host " updated as of " -NoNewline; Write-Host $newFileDateModified -ForegroundColor Yellow
 
         # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
