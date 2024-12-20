@@ -171,7 +171,7 @@ for ($i = $waitTime; $i -gt 0; $i--) {
 }
 
 # Function to set the foreground window by dynamically retrieved title from game process name
-$activateReps = 3 # Number of repetitions for AppActivate/Start-Sleep/SendKeys
+$activateReps = 1 # Number of repetitions for AppActivate/Start-Sleep/SendKeys
 $escKeyPressReps = 4 # Number of ESC key presses
 function Set-ForegroundWindowByGameProcess {
     param (
@@ -187,7 +187,7 @@ function Set-ForegroundWindowByGameProcess {
             $shell = New-Object -ComObject "WScript.Shell"
             for ($i = 0; $i -lt $activateReps; $i++) {
                 $shell.AppActivate($partialTitle)
-                Start-Sleep -Milliseconds 100 # Small delay to ensure AppActivate is processed
+                Start-Sleep -Milliseconds 200 # Small delay to ensure AppActivate is processed
                 $shell.SendKeys('%') # Send Alt key to bring the window to the foreground
             }
             Write-Host "Window '$partialTitle' should now be in the foreground."
