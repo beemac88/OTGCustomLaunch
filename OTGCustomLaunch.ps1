@@ -157,8 +157,17 @@ function Launch-And-MonitorGame {
         Write-Host "Launching game (attempt $($retries + 1) of $maxRetries)..."
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c start $launchCommand"
         
-        # Wait for the game process to start
-        $gameProcessName = "G01Client-Win64-Shipping"
+        # Set the game process name based on the iconPath
+        $gameProcessName = [System.IO.Path]::GetFileNameWithoutExtension($iconPath)
+        Write-Host "Setting game process name to: $gameProcessName" -ForegroundColor Cyan
+        
+        if (-not $gameProcessName) {
+            Write-Host "Error: Game process name is not set!" -ForegroundColor Red
+            Write-Host "Press any key to exit..."
+            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+            exit
+        }
+
         while (-not (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue)) {
             Start-Sleep -Seconds 1
         }
@@ -238,13 +247,12 @@ function Get-WindowHandleByTitle {
 $escKeyPressReps = 2
 
 # Function to set the foreground window by dynamically retrieved title from game process name
-Write-Host "Game process name: $gameProcessName" -ForegroundColor Cyan
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
     )
 
-    Write-Host "Setting foreground window for process: $gameProcessName" -ForegroundColor Cyan
+    Write-Host "Setting foreground window for process: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Cyan
 
     $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
     if ($process) {
@@ -266,11 +274,20 @@ function Set-ForegroundWindowByGameProcess {
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " is already in the foreground."
             }
         } else {
-            Write-Host "No window title found for process " -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
+            Write-Host "No window title found for process " -ForegroundColor Red -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
         }
     } else {
-        Write-Host "No process found with name " -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
+        Write-Host "No process found with name " -ForegroundColor Red -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
     }
+}
+
+# Confirm $gameProcessName is set correctly
+Write-Host "Game process name: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Cyan
+
+if (-not $gameProcessName) {
+    Write-Host "Error: Game process name is empty before calling Set-ForegroundWindowByGameProcess!" -ForegroundColor Red
+	pause
+    exit
 }
 
 # Use the function to set the window with a dynamically retrieved title to the foreground
