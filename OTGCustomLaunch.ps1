@@ -45,6 +45,8 @@ foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
 }
 
 # 8 Get the current file information before downloading the latest script
+# Ensure offlineScriptPath is set
+$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 $fileInfo = Get-Item -Path $offlineScriptPath -ErrorAction SilentlyContinue
 if ($fileInfo) {
     $fileDateModified = $fileInfo.LastWriteTime
@@ -82,7 +84,7 @@ try {
 }
 
 # 10 Define path to the offline script
-$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
+# Note: The path to $offlineScriptPath is already set before section 8. So we can skip resetting it again here.
 
 # 11
 $desktop = [System.Environment]::GetFolderPath('Desktop')
