@@ -1,13 +1,13 @@
-# Define the URL of the latest script version on GitHub
+# 1
 $scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
 
-# Default wait time
+# 2 
 $waitTime = 30
 
-# Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
+# 3 Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
 $defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
 
-# Search for the game install folder by looking for start_offthegrid.exe
+# 4
 $gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
     Test-Path -Path (Join-Path -Path $_.FullName -ChildPath "start_offthegrid.exe")
 } | Select-Object -First 1 -ExpandProperty FullName
@@ -20,10 +20,22 @@ if (-not $gameInstallFolder) {
     Write-Host "Game install folder found at " -NoNewline; Write-Host $gameInstallFolder -ForegroundColor Yellow
 }
 
-# Navigate to the game folder subdirectory G01\Content\Movies
+# 5
+$gameBinariesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Binaries\Win64"
+$global:gameProcessPath = Get-ChildItem -Path $gameBinariesPath -Filter *.exe | Select-Object -First 1 -ExpandProperty FullName
+
+if (-not $global:gameProcessPath) {
+    Write-Output "Executable not found in $gameBinariesPath. Please ensure the game is installed correctly."
+    pause
+    exit
+} else {
+    Write-Host "Game executable found at " -NoNewline; Write-Host $global:gameProcessPath -ForegroundColor Yellow
+}
+
+# 6
 $moviesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Content\Movies"
 
-# Delete specified .mp4 files in the Movies folder and display output for each file being deleted
+# 7
 foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
     $filesToDelete = Get-ChildItem -Path $moviesPath -Filter $pattern
     foreach ($file in $filesToDelete) {
@@ -32,35 +44,28 @@ foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
     }
 }
 
-# Define the path to the script in the game install folder
-$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
-
-# Get the current file information before downloading the latest script
+# 8 Get the current file information before downloading the latest script
 $fileInfo = Get-Item -Path $offlineScriptPath -ErrorAction SilentlyContinue
 if ($fileInfo) {
     $fileDateModified = $fileInfo.LastWriteTime
 } else {
-    # If the file doesn't exist, set a default old date to ensure the script runs the first time
     $fileDateModified = (Get-Date).AddDays(-1)
 }
 
-# Download the latest script version and save it to the game install folder
+# 9 Download the latest script version and save it to the game install folder
 try {
     $latestScript = Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing
     if ($latestScript.StatusCode -eq 200) {
         $latestContent = $latestScript.Content
 
-        # Save the downloaded script to the game install folder
         Set-Content -Path $offlineScriptPath -Value $latestContent -Force
         
-        # Get the new file information
         $newFileInfo = Get-Item -Path $offlineScriptPath
         $newFilePath = $newFileInfo.FullName
         $newFileDateModified = $newFileInfo.LastWriteTime
 
         Write-Host "" -NoNewline; Write-Host $newFilePath -ForegroundColor Yellow -NoNewline; Write-Host " updated as of " -NoNewline; Write-Host $newFileDateModified -ForegroundColor Yellow
 
-        # Restart script if the file was modified more than 30 seconds ago
         if ($fileDateModified -lt (Get-Date).AddSeconds(-30)) {
             Write-Host "Restarting script to execute the latest version as of " -NoNewline; Write-Host $fileDateModified -ForegroundColor Yellow
             Start-Sleep -Seconds 1
@@ -76,25 +81,26 @@ try {
     Start-Sleep -Seconds 10
 }
 
-# Create or overwrite a shortcut on the desktop
+# 10 Define path to the offline script
+$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
+
+# 11
 $desktop = [System.Environment]::GetFolderPath('Desktop')
 $shortcutName = "OTG Custom Launch.lnk"
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
 $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
 $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
-$iconPath = "$gameInstallFolder\G01\Binaries\Win64\G01Client-Win64-Shipping.exe"
 $workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
 
-# Create a WScript.Shell COM object to create the shortcut
+# 12
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $targetPath
 $shortcut.Arguments = $arguments
-$shortcut.IconLocation = $iconPath
+$shortcut.IconLocation = $global:gameProcessPath
 $shortcut.WorkingDirectory = $workingDirectory
 $shortcut.Save()
 
-# Output message
 $shortcutNameWithoutExt = $shortcutName -replace '\.lnk$', ''
 
 if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
@@ -102,8 +108,7 @@ if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
     Write-Host " shortcut exists on Desktop."
 }
 
-# === Custom Section for AW3423DWF Monitor ===
-# Check for the presence of the AW3423DWF monitor
+# 13
 $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach-Object {
     [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName -ne 0)
 } | Where-Object { $_ -eq "AW3423DWF" }
@@ -139,42 +144,38 @@ if ($monitor) {
     # Set a flag indicating the absence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $false
 }
-# === End of Custom Section for AW3423DWF Monitor === #
-
-# Define the Epic Games launch command as a URI
+# 14
 $launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
 
-# Function to launch the game and monitor the process
+# 15
 function Launch-And-MonitorGame {
     param (
+        [string]$gameProcessPath,
         [int]$maxRetries = 3,
         [int]$retryInterval = 5
     )
 
     $retries = 0
+    $global:gameProcessName = [System.IO.Path]::GetFileNameWithoutExtension($gameProcessPath)
+    Write-Host "Setting game process name to: $global:gameProcessName" -ForegroundColor Cyan
+
+    if (-not $global:gameProcessName) {
+        Write-Host "Error: Game process name is not set!" -ForegroundColor Red
+        pause
+        exit
+    }
 
     while ($retries -lt $maxRetries) {
         Write-Host "Launching game (attempt $($retries + 1) of $maxRetries)..."
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c start $launchCommand"
-        
-        # Set the game process name based on the iconPath
-        $gameProcessName = [System.IO.Path]::GetFileNameWithoutExtension($iconPath)
-        Write-Host "Setting game process name to: $gameProcessName" -ForegroundColor Cyan
-        
-        if (-not $gameProcessName) {
-            Write-Host "Error: Game process name is not set!" -ForegroundColor Red
-            Write-Host "Press any key to exit..."
-            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-            exit
-        }
 
-        while (-not (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue)) {
+        Write-Host "Debug: Checking for process $global:gameProcessName" -ForegroundColor Cyan
+        while (-not (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue)) {
             Start-Sleep -Seconds 1
         }
 
-        # Monitor the game process during the countdown timer
         for ($i = $waitTime; $i -gt 0; $i--) {
-            if (Get-Process -Name $gameProcessName -ErrorAction SilentlyContinue) {
+            if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
                 Write-Host "Waiting for $i seconds..."
                 Start-Sleep -Seconds 1
             } else {
@@ -191,13 +192,13 @@ function Launch-And-MonitorGame {
     }
 
     Write-Host "Game process failed to start successfully after $maxRetries attempts." -ForegroundColor Red
-    Write-Host "Press any key to exit..."
-    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    pause
     exit
 }
 
-# Execute the function
-$success = Launch-And-MonitorGame
+# 16
+Write-Host "Debug: Executing Launch-And-MonitorGame with path $global:gameProcessPath" -ForegroundColor Cyan
+$success = Launch-And-MonitorGame -gameProcessPath $global:gameProcessPath
 
 if (-not $success) {
     Write-Host "Exiting script due to repeated failure to launch the game." -ForegroundColor Red
@@ -205,7 +206,7 @@ if (-not $success) {
     exit
 }
 
-# Load the necessary assemblies for window manipulation
+# 17
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -219,7 +220,7 @@ public class User32 {
 }
 "@
 
-# Function to get the title of the foreground window
+# 18
 function Get-ForegroundWindowTitle {
     $handle = [User32]::GetForegroundWindow()
     if ($handle -ne [IntPtr]::Zero) {
@@ -230,7 +231,7 @@ function Get-ForegroundWindowTitle {
     return $null
 }
 
-# Function to get the handle of a window by its title
+# 19
 function Get-WindowHandleByTitle {
     param (
         [string]$windowTitle
@@ -243,10 +244,10 @@ function Get-WindowHandleByTitle {
     return [IntPtr]::Zero
 }
 
-# Number of ESC key presses
+# 20
 $escKeyPressReps = 2
 
-# Function to set the foreground window by dynamically retrieved title from game process name
+# 21
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
@@ -268,7 +269,7 @@ function Set-ForegroundWindowByGameProcess {
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
                 [User32]::SetForegroundWindow($gameWindowHandle)
-                Start-Sleep -Milliseconds 200 # Small delay to ensure SetForegroundWindow is processed
+                Start-Sleep -Milliseconds 200
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " is already in the foreground."
@@ -281,22 +282,21 @@ function Set-ForegroundWindowByGameProcess {
     }
 }
 
-# Confirm $gameProcessName is set correctly
-Write-Host "Game process name: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Cyan
+# 22
+Write-Host "Confirming game process name: $global:gameProcessName" -ForegroundColor Cyan
 
-if (-not $gameProcessName) {
+if (-not $global:gameProcessName) {
     Write-Host "Error: Game process name is empty before calling Set-ForegroundWindowByGameProcess!" -ForegroundColor Red
-	pause
+    pause
     exit
 }
 
-# Use the function to set the window with a dynamically retrieved title to the foreground
-Set-ForegroundWindowByGameProcess -gameProcessName $gameProcessName
+Set-ForegroundWindowByGameProcess -gameProcessName $global:gameProcessName
 
-# Add-Type for SendKeys
+# 23
 Add-Type -AssemblyName 'System.Windows.Forms'
 
-# Simulate pressing the ESC key multiple times with a 250ms delay prior and in between
+# 24
 for ($i = 0; $i -lt $escKeyPressReps; $i++) {
     Start-Sleep -Milliseconds 250
     Write-Host "Simulating ESC key press..."
@@ -305,7 +305,6 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 
 Write-Output "The game should've skipped the intro videos."
 
-# Kill EpicGamesLauncher.exe if AW3423DWF monitor was detected
 if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
-# Wait for 5 seconds to allow reading the console output
+
 Start-Sleep -Seconds 5
