@@ -119,7 +119,7 @@ if ($monitor) {
     Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected."
     
     # Adjust wait time for AW3423DWF monitor
-    $waitTime = 19
+    $waitTime = 22
 
     # Define the path to the JSON file and backup file
     $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
