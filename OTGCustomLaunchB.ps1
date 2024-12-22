@@ -1,16 +1,14 @@
-# 1
-$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
-
-# 2 
+$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/testing/OTGCustomLaunch.ps1"
 $waitTime = 30
+$desktop = [System.Environment]::GetFolderPath('Desktop')
+$shortcutName = "OTG Custom Launch.lnk"
+$targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
+$launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
+$escKeyPressReps = 2
 
-# 3 Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
-$defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
+$defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[-1].Trim() }
 
-# 4
-$gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
-    Test-Path -Path (Join-Path -Path $_.FullName -ChildPath "start_offthegrid.exe")
-} | Select-Object -First 1 -ExpandProperty FullName
+$gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { Test-Path -Path (Join-Path -Path $_.FullName -ChildPath "start_offthegrid.exe") } | Select-Object -First 1 -ExpandProperty FullName
 
 if (-not $gameInstallFolder) {
     Write-Output "Game install folder not found. Please ensure the game is installed correctly."
@@ -20,7 +18,8 @@ if (-not $gameInstallFolder) {
     Write-Host "Game install folder found at " -NoNewline; Write-Host $gameInstallFolder -ForegroundColor Yellow
 }
 
-# 5
+$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunchB.ps1"
+
 $gameBinariesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Binaries\Win64"
 $global:gameProcessPath = Get-ChildItem -Path $gameBinariesPath -Filter *.exe | Select-Object -First 1 -ExpandProperty FullName
 
@@ -32,10 +31,8 @@ if (-not $global:gameProcessPath) {
     Write-Host "Game executable found at " -NoNewline; Write-Host $global:gameProcessPath -ForegroundColor Yellow
 }
 
-# 6
 $moviesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Content\Movies"
 
-# 7
 foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
     $filesToDelete = Get-ChildItem -Path $moviesPath -Filter $pattern
     foreach ($file in $filesToDelete) {
@@ -44,9 +41,6 @@ foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
     }
 }
 
-# 8 Get the current file information before downloading the latest script
-# Ensure offlineScriptPath is set
-$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 $fileInfo = Get-Item -Path $offlineScriptPath -ErrorAction SilentlyContinue
 if ($fileInfo) {
     $fileDateModified = $fileInfo.LastWriteTime
@@ -54,7 +48,6 @@ if ($fileInfo) {
     $fileDateModified = (Get-Date).AddDays(-1)
 }
 
-# 9 Download the latest script version and save it to the game install folder
 try {
     $latestScript = Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing
     if ($latestScript.StatusCode -eq 200) {
@@ -83,18 +76,10 @@ try {
     Start-Sleep -Seconds 10
 }
 
-# 10 Define path to the offline script
-# Note: The path to $offlineScriptPath is already set before section 8. So we can skip resetting it again here.
-
-# 11
-$desktop = [System.Environment]::GetFolderPath('Desktop')
-$shortcutName = "OTG Custom Launch.lnk"
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
-$targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
-$arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
 $workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
+$arguments = "-NoProfile -Command `"$VerbosePreference='Continue'; . '$offlineScriptPath'`""
 
-# 12
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $targetPath
@@ -110,46 +95,33 @@ if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
     Write-Host " shortcut exists on Desktop."
 }
 
-# 13
-$monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach-Object {
-    [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName -ne 0)
-} | Where-Object { $_ -eq "AW3423DWF" }
+$monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach-Object { [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName -ne 0) } | Where-Object { $_ -eq "AW3423DWF" }
 
 if ($monitor) {
     Write-Host $monitor -ForegroundColor Yellow -NoNewline; Write-Host " detected."
     
-    # Adjust wait time for AW3423DWF monitor
     $waitTime = 22
 
-    # Define the path to the JSON file and backup file
     $jsonFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettings.json"
     $backupFilePath = "$env:userprofile\Saved Games\OTG\GzGameUserSettingsGOOD.json"
 
     try {
-        # Check if the backup file exists
         if (-not (Test-Path -Path $backupFilePath)) {
             Write-Host "Backup file GzGameUserSettingsGOOD.json not found." -ForegroundColor Red
             throw [System.IO.FileNotFoundException]::new("Backup file not found")
         }
         
-        # Copy the backup file to overwrite the JSON file with verbose output
         Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force -Verbose
         
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
-        #Start-Sleep -Seconds 10
     }
     
-    # Set a flag indicating the presence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $true
 } else {
-    # Set a flag indicating the absence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $false
 }
-# 14
-$launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
 
-# 15
 function Launch-And-MonitorGame {
     param (
         [string]$gameProcessPath,
@@ -198,7 +170,6 @@ function Launch-And-MonitorGame {
     exit
 }
 
-# 16
 Write-Host "Debug: Executing Launch-And-MonitorGame with path $global:gameProcessPath" -ForegroundColor Cyan
 $success = Launch-And-MonitorGame -gameProcessPath $global:gameProcessPath
 
@@ -208,7 +179,6 @@ if (-not $success) {
     exit
 }
 
-# 17
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -222,7 +192,6 @@ public class User32 {
 }
 "@
 
-# 18
 function Get-ForegroundWindowTitle {
     $handle = [User32]::GetForegroundWindow()
     if ($handle -ne [IntPtr]::Zero) {
@@ -233,7 +202,6 @@ function Get-ForegroundWindowTitle {
     return $null
 }
 
-# 19
 function Get-WindowHandleByTitle {
     param (
         [string]$windowTitle
@@ -246,10 +214,6 @@ function Get-WindowHandleByTitle {
     return [IntPtr]::Zero
 }
 
-# 20
-$escKeyPressReps = 2
-
-# 21
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
@@ -284,7 +248,6 @@ function Set-ForegroundWindowByGameProcess {
     }
 }
 
-# 22
 Write-Host "Confirming game process name: $global:gameProcessName" -ForegroundColor Cyan
 
 if (-not $global:gameProcessName) {
@@ -295,10 +258,8 @@ if (-not $global:gameProcessName) {
 
 Set-ForegroundWindowByGameProcess -gameProcessName $global:gameProcessName
 
-# 23
 Add-Type -AssemblyName 'System.Windows.Forms'
 
-# 24
 for ($i = 0; $i -lt $escKeyPressReps; $i++) {
     Start-Sleep -Milliseconds 250
     Write-Host "Simulating ESC key press..."
@@ -309,4 +270,5 @@ Write-Output "The game should've skipped the intro videos."
 
 if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
 
-Start-Sleep -Seconds 5
+#Start-Sleep -Seconds 5
+pause
