@@ -162,7 +162,7 @@ function Launch-And-MonitorGame {
                     Write-Host -NoNewline " $waitTime second countdown complete."
                 }
             } else {
-                Write-Host "$global:gameProcessPath" -ForegroundColor Green
+                Write-Host "$global:gameProcessName" -ForegroundColor Green
                 Write-Host -NoNewLine " stopped prematurely. Retrying in $retryInterval seconds..."
                 Start-Sleep -Seconds $retryInterval
                 $retries++
@@ -171,17 +171,17 @@ function Launch-And-MonitorGame {
         }
 
         if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-            Write-Host "$global:gameProcessPath" -ForegroundColor Green
+            Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
             Write-Host -NoNewLine " is running. Exiting countdown loop."
             return $true
         } else {
-            Write-Host "$global:gameProcessPath" -ForegroundColor Green
+            Write-Host "$global:gameProcessName" -ForegroundColor Green
             Write-Host -NoNewLine "Is not running. "
             Write-Host -NoNewLine "Retrying..." -ForegroundColor Yellow
         }
     }
 
-    Write-Host "$global:gameProcessPath" -ForegroundColor Green
+    Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
     Write-Host " failed to start successfully after $maxRetries attempts." -ForegroundColor Red
     pause
     exit
