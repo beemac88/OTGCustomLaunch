@@ -242,23 +242,23 @@ function Set-ForegroundWindowByGameProcess {
 
     $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
     if ($process) {
-        Write-Host "Process found: $($process.Name)" -ForegroundColor Green
+        Write-Host "Process found: " -NoNewLine; Write-Host "$($process.Name)" -ForegroundColor Green
 
         $partialTitle = $process.MainWindowTitle
-        Write-Host "Partial title: $partialTitle" -ForegroundColor Green
+        Write-Host "Partial title: " -NoNewLine; Write-Host "$partialTitle" -ForegroundColor Green
 
         if ($partialTitle) {
             $currentForegroundWindowTitle = Get-ForegroundWindowTitle
-            Write-Host "Current foreground window title: $currentForegroundWindowTitle" -ForegroundColor Green
+            Write-Host "Current foreground window title: " -NoNewLine; Write-Host "$currentForegroundWindowTitle" -ForegroundColor Green
 
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
-            Write-Host "Game window handle: $gameWindowHandle" -ForegroundColor Green
+            Write-Host "Game window handle: " -NoNewLine; Write-Host "$gameWindowHandle" -ForegroundColor Green
 
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
-                Write-Host "Bringing window to foreground..." -ForegroundColor Green
+                Write-Host "Bringing " -NoNewLine; Write-Host "$gameWindowHandle" -NoNewLine -ForegroundColor Green"; Write-Host " to foreground..."
                 [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
-                Write-Host "SetForegroundWindow result: $result" -ForegroundColor Green
+                Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
                 Start-Sleep -Milliseconds 200
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
