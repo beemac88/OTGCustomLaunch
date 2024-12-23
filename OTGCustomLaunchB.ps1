@@ -294,4 +294,4 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 
 #Start-Sleep -Seconds 5
 pause
-Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
+#Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
