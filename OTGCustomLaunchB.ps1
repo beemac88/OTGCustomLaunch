@@ -171,7 +171,7 @@ function Launch-And-MonitorGame {
         }
 
         if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-            Write-Host -NoNewLine"$global:gameProcessName" -ForegroundColor Green
+            Write-Host -NoNewLine "$global:gameProcessName" -ForegroundColor Green
             Write-Host -NoNewLine " is running. Exiting countdown loop."
             return $true
         } else {
