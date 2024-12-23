@@ -1,7 +1,7 @@
 $scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/testing/OTGCustomLaunchB.ps1"
 $waitTime = 30
 $desktop = [System.Environment]::GetFolderPath('Desktop')
-$shortcutName = "OTG Custom Launch.lnk"
+$shortcutName = "OTG Custom LaunchB.lnk"
 $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe")
 $launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
 $escKeyPressReps = 2
