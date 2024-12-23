@@ -169,8 +169,11 @@ function Launch-And-MonitorGame {
             }
         }
 
-        if ($i -eq 0) {
+        if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
+            Write-Host "`rGame process is running. Exiting countdown loop." -ForegroundColor Green
             return $true
+        } else {
+            Write-Host "Game process is not running. Retrying..." -ForegroundColor Yellow
         }
     }
 
