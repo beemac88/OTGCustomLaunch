@@ -111,7 +111,7 @@ if ($monitor) {
             throw [System.IO.FileNotFoundException]::new("Backup file not found")
         }
         
-        Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
+        Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force -Verbose
         
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
@@ -284,8 +284,6 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
     Write-Host "Simulating ESC key press..."
     [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
 }
-
-Write-Output "The game should've skipped the intro videos."
 
 #if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
 
