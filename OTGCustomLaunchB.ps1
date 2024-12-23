@@ -188,15 +188,6 @@ if (-not $success) {
     exit
 }
 
-Write-Host "Debug: Executing Launch-And-MonitorGame with path $global:gameProcessPath" -ForegroundColor Cyan
-$success = Launch-And-MonitorGame -gameProcessPath $global:gameProcessPath
-
-if (-not $success) {
-    Write-Host "Exiting script due to repeated failure to launch the game." -ForegroundColor Red
-    pause
-    exit
-}
-
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
