@@ -150,7 +150,7 @@ function Launch-And-MonitorGame {
 
         for ($i = $waitTime; $i -gt 0; $i--) {
             if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-                Write-Host "Waiting for $i seconds..."
+                Write-Host -NoNewline "`rWaiting for $i seconds..."
                 Start-Sleep -Seconds 1
             } else {
                 Write-Host "Game process stopped prematurely. Retrying in $retryInterval seconds..."
@@ -159,6 +159,7 @@ function Launch-And-MonitorGame {
                 break
             }
         }
+        Write-Host "`rCountdown complete.                "
 
         if ($i -eq 0) {
             return $true
