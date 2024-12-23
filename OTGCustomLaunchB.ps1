@@ -150,9 +150,9 @@ function Launch-And-MonitorGame {
 
         for ($i = $waitTime; $i -gt 0; $i--) {
             if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-                Write-Host -NoNewline "`rWaiting for " -ForegroundColor White
-                Write-Host -NoNewline "$i" -ForegroundColor Blue
-                Write-Host -NoNewline " seconds..." -ForegroundColor White
+                Write-Host -NoNewline "`rWaiting for " -ForegroundColor White -NoNewline
+                Write-Host "$i" -ForegroundColor Blue -NoNewline
+                Write-Host " seconds..." -ForegroundColor White
                 Start-Sleep -Seconds 1
             } else {
                 Write-Host "Game process stopped prematurely. Retrying in $retryInterval seconds..."
@@ -161,7 +161,9 @@ function Launch-And-MonitorGame {
                 break
             }
         }
-        Write-Host "`rCountdown complete.                "
+        Write-Host "`r" -NoNewline
+        Write-Host "$waitTime" -ForegroundColor Blue -NoNewline
+        Write-Host " second countdown complete."
 
         if ($i -eq 0) {
             return $true
