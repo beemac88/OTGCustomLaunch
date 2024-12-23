@@ -176,7 +176,7 @@ function Launch-And-MonitorGame {
             return $true
         } else {
             Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
-            Write-Host "Is not running. " -NoNewLine 
+            Write-Host " is not running. " -NoNewLine 
             Write-Host "Retrying..." -ForegroundColor Yellow
         }
     }
