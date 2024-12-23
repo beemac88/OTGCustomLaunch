@@ -1,4 +1,4 @@
-$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/testing/OTGCustomLaunchB.ps1"
+$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
 $waitTime = 30
 $desktop = [System.Environment]::GetFolderPath('Desktop')
 $shortcutName = "OTG Custom Launch.lnk"
@@ -18,7 +18,7 @@ if (-not $gameInstallFolder) {
     Write-Host "Game install folder found at " -NoNewline; Write-Host $gameInstallFolder -ForegroundColor Yellow
 }
 
-$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunchB.ps1"
+$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 
 $gameBinariesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Binaries\Win64"
 $global:gameProcessPath = Get-ChildItem -Path $gameBinariesPath -Filter *.exe | Select-Object -First 1 -ExpandProperty FullName
@@ -111,7 +111,7 @@ if ($monitor) {
             throw [System.IO.FileNotFoundException]::new("Backup file not found")
         }
         
-        Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force -Verbose
+        Copy-Item -Path $backupFilePath -Destination $jsonFilePath -Force
         
     } catch {
         Write-Host "An error occurred while copying the backup file: $_" -ForegroundColor Red
@@ -150,7 +150,9 @@ function Launch-And-MonitorGame {
 
         for ($i = $waitTime; $i -gt 0; $i--) {
             if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-                Write-Host -NoNewline "`rWaiting for $i seconds..."
+                Write-Host -NoNewline "`rWaiting for " -ForegroundColor White
+                Write-Host -NoNewline "$i" -ForegroundColor Blue
+                Write-Host -NoNewline " seconds..." -ForegroundColor White
                 Start-Sleep -Seconds 1
             } else {
                 Write-Host "Game process stopped prematurely. Retrying in $retryInterval seconds..."
@@ -234,8 +236,9 @@ function Set-ForegroundWindowByGameProcess {
             Write-Host "Current foreground window title: $currentForegroundWindowTitle" -ForegroundColor Green
 
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
+            $result = [User32]::SetForegroundWindow($gameWindowHandle)
+            Write-Host "SetForegroundWindow result: $result" -ForegroundColor Yellow
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
-                [User32]::SetForegroundWindow($gameWindowHandle)
                 Start-Sleep -Milliseconds 200
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
