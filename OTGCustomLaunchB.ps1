@@ -148,12 +148,19 @@ function Launch-And-MonitorGame {
             Start-Sleep -Seconds 1
         }
 
-        for ($i = $waitTime; $i -gt 0; $i--) {
+        for ($i = $waitTime; $i -ge 0; $i--) {
             if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
                 Write-Host -NoNewline "`rWaiting for " -ForegroundColor White
                 Write-Host -NoNewline "$i" -ForegroundColor Blue
                 Write-Host -NoNewline " seconds..." -ForegroundColor White
-                Start-Sleep -Seconds 1
+
+                # Sleep only if $i is greater than 0
+                if ($i -gt 0) {
+                    Start-Sleep -Seconds 1
+                } else {
+                    # On the last iteration, append the final message
+                    Write-Host -NoNewline " $waitTime second countdown complete."
+                }
             } else {
                 Write-Host "Game process stopped prematurely. Retrying in $retryInterval seconds..."
                 Start-Sleep -Seconds $retryInterval
@@ -161,9 +168,6 @@ function Launch-And-MonitorGame {
                 break
             }
         }
-        Write-Host "`r" -NoNewline
-        Write-Host "$waitTime" -ForegroundColor Blue -NoNewline
-        Write-Host " second countdown complete."
 
         if ($i -eq 0) {
             return $true
@@ -194,6 +198,8 @@ public class User32 {
     public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")]
     public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 }
 "@
 
@@ -238,13 +244,17 @@ function Set-ForegroundWindowByGameProcess {
             Write-Host "Current foreground window title: $currentForegroundWindowTitle" -ForegroundColor Green
 
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
+            Write-Host "Game window handle: $gameWindowHandle" -ForegroundColor Green
+
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
+                Write-Host "Bringing window to foreground..." -ForegroundColor Green
+                [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
                 Write-Host "SetForegroundWindow result: $result" -ForegroundColor Green
                 Start-Sleep -Milliseconds 200
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
-                Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " is already in the foreground."
+                Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " is already in the foreground or handle is invalid."
             }
         } else {
             Write-Host "No window title found for process " -ForegroundColor Red -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
