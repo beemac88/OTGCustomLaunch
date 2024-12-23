@@ -78,7 +78,7 @@ try {
 
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
 $workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
-$arguments = "-NoProfile -Command `"$VerbosePreference='Continue'; . '$offlineScriptPath'`""
+$arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
 
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
