@@ -1,4 +1,4 @@
-$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
+$scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/testing/OTGCustomLaunchB.ps1"
 $waitTime = 30
 $desktop = [System.Environment]::GetFolderPath('Desktop')
 $shortcutName = "OTG Custom Launch.lnk"
@@ -18,7 +18,7 @@ if (-not $gameInstallFolder) {
     Write-Host "Game install folder found at " -NoNewline; Write-Host $gameInstallFolder -ForegroundColor Yellow
 }
 
-$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
+$offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunchB.ps1"
 
 $gameBinariesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Binaries\Win64"
 $global:gameProcessPath = Get-ChildItem -Path $gameBinariesPath -Filter *.exe | Select-Object -First 1 -ExpandProperty FullName
