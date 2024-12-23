@@ -236,9 +236,9 @@ function Set-ForegroundWindowByGameProcess {
             Write-Host "Current foreground window title: $currentForegroundWindowTitle" -ForegroundColor Green
 
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
-            $result = [User32]::SetForegroundWindow($gameWindowHandle)
-            Write-Host "SetForegroundWindow result: $result" -ForegroundColor Yellow
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
+                $result = [User32]::SetForegroundWindow($gameWindowHandle)
+                Write-Host "SetForegroundWindow result: $result" -ForegroundColor Green
                 Start-Sleep -Milliseconds 200
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
@@ -272,7 +272,7 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
 
 Write-Output "The game should've skipped the intro videos."
 
-if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
+#if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
 
 #Start-Sleep -Seconds 5
 pause
