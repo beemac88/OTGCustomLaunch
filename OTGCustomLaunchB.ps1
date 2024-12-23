@@ -159,7 +159,7 @@ function Launch-And-MonitorGame {
                     Start-Sleep -Seconds 1
                 } else {
                     # On the last iteration, append the final message
-                    Write-Host -NoNewline " $waitTime second countdown complete."
+                    Write-Host " $waitTime second countdown complete."
                 }
             } else {
                 Write-Host "$global:gameProcessName" -ForegroundColor Green
@@ -171,13 +171,13 @@ function Launch-And-MonitorGame {
         }
 
         if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-            Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
-            Write-Host -NoNewLine " is running. Exiting countdown loop."
+            Write-Host "$global:gameProcessName" -ForegroundColor Green
+            Write-Host " is running. Exiting countdown loop." -NoNewLine 
             return $true
         } else {
-            Write-Host "$global:gameProcessName" -ForegroundColor Green
-            Write-Host -NoNewLine "Is not running. "
-            Write-Host -NoNewLine "Retrying..." -ForegroundColor Yellow
+            Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
+            Write-Host "Is not running. " -NoNewLine 
+            Write-Host "Retrying..." -ForegroundColor Yellow
         }
     }
 
