@@ -255,7 +255,7 @@ function Set-ForegroundWindowByGameProcess {
             Write-Host "Game window handle: " -NoNewLine; Write-Host "$gameWindowHandle" -ForegroundColor Green
 
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
-                Write-Host "Bringing window " -NoNewLine; Write-Host "$partialTitle" -NoNewLine; Write-Host " to foreground..." -ForegroundColor Green
+                Write-Host "Bringing window " -NoNewLine; Write-Host "$partialTitle" -NoNewLine -ForegroundColor Green; Write-Host " to foreground..."
                 [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
                 Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
