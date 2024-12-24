@@ -171,17 +171,17 @@ function Launch-And-MonitorGame {
         }
 
         if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-            Write-Host -NoNewLine "$global:gameProcessName" -ForegroundColor Green
+            Write-Host -NoNewline "$global:gameProcessName" -ForegroundColor Green
             Write-Host " is running. Exiting countdown loop."
             return $true
         } else {
-            Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
-            Write-Host " is not running. " -NoNewLine 
+            Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewline
+            Write-Host " is not running. " -NoNewline 
             Write-Host "Retrying..." -ForegroundColor Yellow
         }
     }
 
-    Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
+    Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewline
     Write-Host " failed to start successfully after $maxRetries attempts." -ForegroundColor Red
     pause
     exit
@@ -196,6 +196,7 @@ if (-not $success) {
     exit
 }
 
+# Ensure the rest of your script is enclosed properly
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -242,23 +243,23 @@ function Set-ForegroundWindowByGameProcess {
 
     $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
     if ($process) {
-        Write-Host "Process found: " -NoNewLine; Write-Host "$($process.Name)" -ForegroundColor Green
+        Write-Host "Process found: $($process.Name)" -ForegroundColor Green
 
         $partialTitle = $process.MainWindowTitle
-        Write-Host "Partial title: " -NoNewLine; Write-Host "$partialTitle" -ForegroundColor Green
+        Write-Host "Partial title: $partialTitle" -ForegroundColor Green
 
         if ($partialTitle) {
             $currentForegroundWindowTitle = Get-ForegroundWindowTitle
-            Write-Host "Current foreground window title: " -NoNewLine; Write-Host "$currentForegroundWindowTitle" -ForegroundColor Green
+            Write-Host "Current foreground window title: $currentForegroundWindowTitle" -ForegroundColor Green
 
             $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
-            Write-Host "Game window handle: " -NoNewLine; Write-Host "$gameWindowHandle" -ForegroundColor Green
+            Write-Host "Game window handle: $gameWindowHandle" -ForegroundColor Green
 
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
-                Write-Host "Bringing " -NoNewLine; Write-Host "$gameWindowHandle" -NoNewLine -ForegroundColor Green"; Write-Host " to foreground..."
+                Write-Host "Bringing window to foreground..." -ForegroundColor Green
                 [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
-                Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
+                Write-Host "SetForegroundWindow result: $result" -ForegroundColor Green
                 Start-Sleep -Milliseconds 200
                 Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
             } else {
@@ -290,8 +291,9 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
     [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
 }
 
+Write-Output "The game should've skipped the intro videos."
+
 #if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
 
 #Start-Sleep -Seconds 5
 pause
-#Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$newFilePath`""
