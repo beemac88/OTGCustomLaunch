@@ -228,7 +228,8 @@ public class WindowHelper {
         if (processes.Length > 0) {
             IntPtr hWnd = processes[0].MainWindowHandle;
             if (hWnd != IntPtr.Zero) {
-                uint foregroundThreadID = GetWindowThreadProcessId(GetForegroundWindow(), out _);
+                uint foregroundThreadID;
+                GetWindowThreadProcessId(GetForegroundWindow(), out foregroundThreadID);
                 uint currentThreadID = GetCurrentThreadId();
                 AttachThreadInput(currentThreadID, foregroundThreadID, true);
                 ShowWindow(hWnd, SW_RESTORE);
