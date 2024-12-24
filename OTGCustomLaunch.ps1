@@ -305,8 +305,8 @@ for ($i = 0; $i -lt $escKeyPressReps; $i++) {
     [System.Windows.Forms.SendKeys]::SendWait("{ESC}")
 }
 
-Write-Output "The game should've skipped the intro videos."
+#Write-Output "The game should've skipped the intro videos."
 
-if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
+#if ($global:IsAW3423DWFMonitorPresent) { Stop-Process -Name "EpicGamesLauncher" }
 
 Start-Sleep -Seconds 5
