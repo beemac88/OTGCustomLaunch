@@ -238,7 +238,7 @@ function Set-ForegroundWindowByGameProcess {
         [string]$gameProcessName
     )
 
-    Write-Host "Setting foreground window for process: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Cyan
+    Write-Host "Setting foreground window for process: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Green
 
     $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
     if ($process) {
@@ -272,7 +272,7 @@ function Set-ForegroundWindowByGameProcess {
     }
 }
 
-Write-Host "Confirming game process name: $global:gameProcessName" -ForegroundColor Cyan
+Write-Host "Confirming game process name: " -NoNewLine; Write-Host "$global:gameProcessName" -ForegroundColor Green
 
 if (-not $global:gameProcessName) {
     Write-Host "Error: Game process name is empty before calling Set-ForegroundWindowByGameProcess!" -ForegroundColor Red
