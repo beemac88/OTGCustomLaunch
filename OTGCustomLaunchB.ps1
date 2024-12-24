@@ -256,12 +256,12 @@ function Set-ForegroundWindowByGameProcess {
 
             if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
                 Write-Host "Bringing window " -NoNewLine; Write-Host "$partialTitle" -ForegroundColor Green -NoNewLine; Write-Host " to foreground..."
+
+                # Ensure the window is not minimized
                 [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
-
-                # Debugging information
-                $restoreResult = [User32]::ShowWindow($gameWindowHandle, 9)
-                Write-Host "Restoring window state: " -NoNewLine; Write-Host "$restoreResult"
-
+                Write-Host "Restoring window state: " -NoNewLine; Write-Host "$([User32]::ShowWindow($gameWindowHandle, 9))"
+                
+                # Attempt to bring the window to the foreground
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
                 Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
                 
@@ -270,6 +270,16 @@ function Set-ForegroundWindowByGameProcess {
                     Write-Host "1. Window is not a top-level window." -ForegroundColor Red
                     Write-Host "2. The thread does not have foreground privileges." -ForegroundColor Red
                     Write-Host "3. The window handle is invalid." -ForegroundColor Red
+
+                    # Additional debugging: check if the window is a top-level window
+                    $isTopLevel = [User32]::IsWindow($gameWindowHandle)
+                    Write-Host "Is window handle valid: " -NoNewLine; Write-Host "$isTopLevel" -ForegroundColor Green
+
+                    # Additional debugging: check if the thread has foreground privileges
+                    $foregroundThreadID = [User32]::GetWindowThreadProcessId([User32]::GetForegroundWindow(), [ref]0)
+                    $currentThreadID = [User32]::GetCurrentThreadId()
+                    Write-Host "Foreground thread ID: " -NoNewLine; Write-Host "$foregroundThreadID" -ForegroundColor Green
+                    Write-Host "Current thread ID: " -NoNewLine; Write-Host "$currentThreadID" -ForegroundColor Green
                 }
 
                 Start-Sleep -Milliseconds 200
