@@ -208,6 +208,14 @@ public class User32 {
     public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    [DllImport("kernel32.dll")]
+    public static extern uint GetCurrentThreadId();
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool IsWindow(IntPtr hWnd);
 }
 "@
 
@@ -261,25 +269,23 @@ function Set-ForegroundWindowByGameProcess {
                 [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
                 Write-Host "Restoring window state: " -NoNewLine; Write-Host "$([User32]::ShowWindow($gameWindowHandle, 9))"
                 
+                # Attach the input threads to ensure SetForegroundWindow works
+                $currentThreadID = [User32]::GetCurrentThreadId()
+                $foregroundThreadID = [User32]::GetWindowThreadProcessId([User32]::GetForegroundWindow(), [ref]0)
+                [User32]::AttachThreadInput($currentThreadID, $foregroundThreadID, $true)
+                
                 # Attempt to bring the window to the foreground
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
                 Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
+                
+                # Detach the input threads
+                [User32]::AttachThreadInput($currentThreadID, $foregroundThreadID, $false)
                 
                 if (-not $result) {
                     Write-Host "Failed to bring window to foreground. Possible reasons:" -ForegroundColor Red
                     Write-Host "1. Window is not a top-level window." -ForegroundColor Red
                     Write-Host "2. The thread does not have foreground privileges." -ForegroundColor Red
                     Write-Host "3. The window handle is invalid." -ForegroundColor Red
-
-                    # Additional debugging: check if the window is a top-level window
-                    $isTopLevel = [User32]::IsWindow($gameWindowHandle)
-                    Write-Host "Is window handle valid: " -NoNewLine; Write-Host "$isTopLevel" -ForegroundColor Green
-
-                    # Additional debugging: check if the thread has foreground privileges
-                    $foregroundThreadID = [User32]::GetWindowThreadProcessId([User32]::GetForegroundWindow(), [ref]0)
-                    $currentThreadID = [User32]::GetCurrentThreadId()
-                    Write-Host "Foreground thread ID: " -NoNewLine; Write-Host "$foregroundThreadID" -ForegroundColor Green
-                    Write-Host "Current thread ID: " -NoNewLine; Write-Host "$currentThreadID" -ForegroundColor Green
                 }
 
                 Start-Sleep -Milliseconds 200
