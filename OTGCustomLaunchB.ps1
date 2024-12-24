@@ -196,51 +196,53 @@ if (-not $success) {
     exit
 }
 
+# Add the C# code to the PowerShell script
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
-public class User32 {
+using System.Diagnostics;
+
+public class WindowHelper {
     [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool SetForegroundWindow(IntPtr hWnd);
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
     [DllImport("user32.dll")]
-    public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
     [DllImport("user32.dll")]
-    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
     [DllImport("kernel32.dll")]
-    public static extern uint GetCurrentThreadId();
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
-    [DllImport("user32.dll", SetLastError = true)]
-    public static extern bool IsWindow(IntPtr hWnd);
+    private static extern uint GetCurrentThreadId();
+
+    [DllImport("user32.dll")]
+    private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+    const int SW_RESTORE = 9;
+
+    public static bool BringWindowToFront(string processName) {
+        Process[] processes = Process.GetProcessesByName(processName);
+        if (processes.Length > 0) {
+            IntPtr hWnd = processes[0].MainWindowHandle;
+            if (hWnd != IntPtr.Zero) {
+                uint foregroundThreadID = GetWindowThreadProcessId(GetForegroundWindow(), out _);
+                uint currentThreadID = GetCurrentThreadId();
+                AttachThreadInput(currentThreadID, foregroundThreadID, true);
+                ShowWindow(hWnd, SW_RESTORE);
+                bool result = SetForegroundWindow(hWnd);
+                AttachThreadInput(currentThreadID, foregroundThreadID, false);
+                return result;
+            }
+        }
+        return false;
+    }
 }
 "@
 
-function Get-ForegroundWindowTitle {
-    $handle = [User32]::GetForegroundWindow()
-    if ($handle -ne [IntPtr]::Zero) {
-        $title = New-Object System.Text.StringBuilder 256
-        [User32]::GetWindowText($handle, $title, $title.Capacity) | Out-Null
-        return $title.ToString()
-    }
-    return $null
-}
-
-function Get-WindowHandleByTitle {
-    param (
-        [string]$windowTitle
-    )
-    
-    $process = Get-Process | Where-Object { $_.MainWindowTitle -eq $windowTitle } | Select-Object -First 1
-    if ($process) {
-        return $process.MainWindowHandle
-    }
-    return [IntPtr]::Zero
-}
-
+# Function to call the C# method to bring the window to the foreground
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
@@ -248,56 +250,12 @@ function Set-ForegroundWindowByGameProcess {
 
     Write-Host "Setting foreground window for process: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Green
 
-    $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
-    if ($process) {
-        Write-Host "Process found: " -NoNewLine; Write-Host "$($process.Name)" -ForegroundColor Green
+    $result = [WindowHelper]::BringWindowToFront($gameProcessName)
 
-        $partialTitle = $process.MainWindowTitle
-        Write-Host "Partial title: " -NoNewLine; Write-Host "$partialTitle" -ForegroundColor Green
-
-        if ($partialTitle) {
-            $currentForegroundWindowTitle = Get-ForegroundWindowTitle
-            Write-Host "Current foreground window title: " -NoNewLine; Write-Host "$currentForegroundWindowTitle" -ForegroundColor Green
-
-            $gameWindowHandle = Get-WindowHandleByTitle -windowTitle $partialTitle
-            Write-Host "Game window handle: " -NoNewLine; Write-Host "$gameWindowHandle" -ForegroundColor Green
-
-            if ($currentForegroundWindowTitle -ne $partialTitle -and $gameWindowHandle -ne [IntPtr]::Zero) {
-                Write-Host "Bringing window " -NoNewLine; Write-Host "$partialTitle" -ForegroundColor Green -NoNewLine; Write-Host " to foreground..."
-
-                # Ensure the window is not minimized
-                [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
-                Write-Host "Restoring window state: " -NoNewLine; Write-Host "$([User32]::ShowWindow($gameWindowHandle, 9))"
-                
-                # Attach the input threads to ensure SetForegroundWindow works
-                $currentThreadID = [User32]::GetCurrentThreadId()
-                $foregroundThreadID = [User32]::GetWindowThreadProcessId([User32]::GetForegroundWindow(), [ref]0)
-                [User32]::AttachThreadInput($currentThreadID, $foregroundThreadID, $true)
-                
-                # Attempt to bring the window to the foreground
-                $result = [User32]::SetForegroundWindow($gameWindowHandle)
-                Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
-                
-                # Detach the input threads
-                [User32]::AttachThreadInput($currentThreadID, $foregroundThreadID, $false)
-                
-                if (-not $result) {
-                    Write-Host "Failed to bring window to foreground. Possible reasons:" -ForegroundColor Red
-                    Write-Host "1. Window is not a top-level window." -ForegroundColor Red
-                    Write-Host "2. The thread does not have foreground privileges." -ForegroundColor Red
-                    Write-Host "3. The window handle is invalid." -ForegroundColor Red
-                }
-
-                Start-Sleep -Milliseconds 200
-                Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " should now be in the foreground."
-            } else {
-                Write-Host "Window " -NoNewline; Write-Host $partialTitle -ForegroundColor Yellow -NoNewline; Write-Host " is already in the foreground or handle is invalid."
-            }
-        } else {
-            Write-Host "No window title found for process " -ForegroundColor Red -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
-        }
+    if ($result) {
+        Write-Host "Window brought to the foreground successfully." -ForegroundColor Green
     } else {
-        Write-Host "No process found with name " -ForegroundColor Red -NoNewline; Write-Host $gameProcessName -ForegroundColor Yellow
+        Write-Host "Failed to bring window to the foreground." -ForegroundColor Red
     }
 }
 
