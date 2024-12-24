@@ -238,7 +238,7 @@ function Set-ForegroundWindowByGameProcess {
         [string]$gameProcessName
     )
 
-    Write-Host "Setting foreground window for process: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Cyan
+    Write-Host "Setting foreground window for process: " -NoNewLine; Write-Host "$gameProcessName" -ForegroundColor Green
 
     $process = Get-Process | Where-Object { $_.ProcessName -eq $gameProcessName } | Select-Object -First 1
     if ($process) {
@@ -259,13 +259,17 @@ function Set-ForegroundWindowByGameProcess {
                 [User32]::ShowWindow($gameWindowHandle, 9)  # 9 = SW_RESTORE
 
                 # Debugging information
-                Write-Host "Restoring window state: " -NoNewLine; Write-Host "$([User32]::ShowWindow($gameWindowHandle, 9))"
-                
+                $restoreResult = [User32]::ShowWindow($gameWindowHandle, 9)
+                Write-Host "Restoring window state: " -NoNewLine; Write-Host "$restoreResult"
+
                 $result = [User32]::SetForegroundWindow($gameWindowHandle)
                 Write-Host "SetForegroundWindow result: " -NoNewLine; Write-Host "$result" -ForegroundColor Green
                 
                 if (-not $result) {
-                    Write-Host "Failed to bring window to foreground. Possible reasons: window is not a top-level window, the thread does not have foreground privileges, or the window handle is invalid." -ForegroundColor Red
+                    Write-Host "Failed to bring window to foreground. Possible reasons:" -ForegroundColor Red
+                    Write-Host "1. Window is not a top-level window." -ForegroundColor Red
+                    Write-Host "2. The thread does not have foreground privileges." -ForegroundColor Red
+                    Write-Host "3. The window handle is invalid." -ForegroundColor Red
                 }
 
                 Start-Sleep -Milliseconds 200
