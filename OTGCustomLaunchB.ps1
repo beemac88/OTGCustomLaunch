@@ -131,7 +131,7 @@ function Launch-And-MonitorGame {
 
     $retries = 0
     $global:gameProcessName = [System.IO.Path]::GetFileNameWithoutExtension($gameProcessPath)
-    Write-Host "Setting game process name to: $global:gameProcessName" -ForegroundColor Cyan
+    Write-Host "Setting game process name to: " -NoNewLine; Write-Host "$global:gameProcessName" -ForegroundColor Green
 
     if (-not $global:gameProcessName) {
         Write-Host "Error: Game process name is not set!" -ForegroundColor Red
@@ -143,7 +143,7 @@ function Launch-And-MonitorGame {
         Write-Host "Launching game (attempt $($retries + 1) of $maxRetries)..."
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c start $launchCommand"
 
-        Write-Host "Debug: Checking for process $global:gameProcessName" -ForegroundColor Cyan
+        Write-Host "Debug: Checking for process " -NoNewLine; Write-Host "$global:gameProcessName" -ForegroundColor Green
         while (-not (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue)) {
             Start-Sleep -Seconds 1
         }
