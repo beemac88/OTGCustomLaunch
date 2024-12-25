@@ -1,13 +1,9 @@
 # 1
 $scriptUrl = "https://raw.githubusercontent.com/beemac88/OTGCustomLaunch/main/OTGCustomLaunch.ps1"
-
-# 2 
 $waitTime = 30
-
-# 3 Retrieve the DefaultAppInstallLocation from GameUserSettings.ini
 $defaultInstallLocation = Select-String -Path "$env:LOCALAPPDATA\EpicGamesLauncher\Saved\Config\Windows\GameUserSettings.ini" -Pattern "DefaultAppInstallLocation" | ForEach-Object { $_.Line.Split('=')[1].Trim() }
 
-# 4
+# 2
 $gameInstallFolder = Get-ChildItem -Path $defaultInstallLocation -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object {
     Test-Path -Path (Join-Path -Path $_.FullName -ChildPath "start_offthegrid.exe")
 } | Select-Object -First 1 -ExpandProperty FullName
@@ -20,7 +16,6 @@ if (-not $gameInstallFolder) {
     Write-Host "Game install folder found at " -NoNewline; Write-Host $gameInstallFolder -ForegroundColor Yellow
 }
 
-# 5
 $gameBinariesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Binaries\Win64"
 $global:gameProcessPath = Get-ChildItem -Path $gameBinariesPath -Filter *.exe | Select-Object -First 1 -ExpandProperty FullName
 
@@ -32,10 +27,9 @@ if (-not $global:gameProcessPath) {
     Write-Host "Game executable found at " -NoNewline; Write-Host $global:gameProcessPath -ForegroundColor Yellow
 }
 
-# 6
 $moviesPath = Join-Path -Path $gameInstallFolder -ChildPath "G01\Content\Movies"
 
-# 7
+# 3
 foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
     $filesToDelete = Get-ChildItem -Path $moviesPath -Filter $pattern
     foreach ($file in $filesToDelete) {
@@ -44,8 +38,7 @@ foreach ($pattern in @("OTG*.mp4", "UE*.mp4")) {
     }
 }
 
-# 8 Get the current file information before downloading the latest script
-# Ensure offlineScriptPath is set
+# 4
 $offlineScriptPath = Join-Path -Path $gameInstallFolder -ChildPath "OTGCustomLaunch.ps1"
 $fileInfo = Get-Item -Path $offlineScriptPath -ErrorAction SilentlyContinue
 if ($fileInfo) {
@@ -54,7 +47,6 @@ if ($fileInfo) {
     $fileDateModified = (Get-Date).AddDays(-1)
 }
 
-# 9 Download the latest script version and save it to the game install folder
 try {
     $latestScript = Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing
     if ($latestScript.StatusCode -eq 200) {
@@ -83,10 +75,7 @@ try {
     Start-Sleep -Seconds 10
 }
 
-# 10 Define path to the offline script
-# Note: The path to $offlineScriptPath is already set before section 8. So we can skip resetting it again here.
-
-# 11
+# 5
 $desktop = [System.Environment]::GetFolderPath('Desktop')
 $shortcutName = "OTG Custom Launch.lnk"
 $shortcutPath = Join-Path -Path $desktop -ChildPath $shortcutName
@@ -94,7 +83,6 @@ $targetPath = [System.Environment]::ExpandEnvironmentVariables("%systemroot%\Sys
 $arguments = "-ExecutionPolicy Bypass -File `"$offlineScriptPath`""
 $workingDirectory = (Get-Item -Path $targetPath).Directory.FullName
 
-# 12
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $targetPath
@@ -110,7 +98,7 @@ if (Test-Path -Path $shortcutPath -NewerThan (Get-Date).AddSeconds(-10)) {
     Write-Host " shortcut exists on Desktop."
 }
 
-# 13
+# 6
 $monitor = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID | ForEach-Object {
     [System.Text.Encoding]::ASCII.GetString($_.UserFriendlyName -ne 0)
 } | Where-Object { $_ -eq "AW3423DWF" }
@@ -146,10 +134,10 @@ if ($monitor) {
     # Set a flag indicating the absence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $false
 }
-# 14
+
+# 7
 $launchCommand = "com.epicgames.launcher://apps/c5e46dc234c449408ede15767c2c631e%3A4d313b3e706c487ebef57d3511f800d1%3Aec7eb1b404154fdeafcb44b02ff5a980?action=launch&silent=true"
 
-# 15
 function Launch-And-MonitorGame {
     param (
         [string]$gameProcessPath,
@@ -159,7 +147,7 @@ function Launch-And-MonitorGame {
 
     $retries = 0
     $global:gameProcessName = [System.IO.Path]::GetFileNameWithoutExtension($gameProcessPath)
-    Write-Host "Setting game process name to: $global:gameProcessName" -ForegroundColor Cyan
+    Write-Host "Setting game process name to: " -NoNewLine; Write-Host $global:gameProcessName -ForegroundColor Green
 
     if (-not $global:gameProcessName) {
         Write-Host "Error: Game process name is not set!" -ForegroundColor Red
@@ -171,34 +159,50 @@ function Launch-And-MonitorGame {
         Write-Host "Launching game (attempt $($retries + 1) of $maxRetries)..."
         Start-Process -FilePath "cmd.exe" -ArgumentList "/c start $launchCommand"
 
-        Write-Host "Debug: Checking for process $global:gameProcessName" -ForegroundColor Cyan
+        Write-Host "Debug: Checking for process " -NoNewLine; Write-Host $global:gameProcessName -ForegroundColor Green
         while (-not (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue)) {
             Start-Sleep -Seconds 1
         }
 
-        for ($i = $waitTime; $i -gt 0; $i--) {
+        for ($i = $waitTime; $i -ge 0; $i--) {
             if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
-                Write-Host "Waiting for $i seconds..."
-                Start-Sleep -Seconds 1
+                Write-Host -NoNewline "`rWaiting for " -ForegroundColor White
+                Write-Host -NoNewline "$i" -ForegroundColor Blue
+                Write-Host -NoNewline " seconds..." -ForegroundColor White
+
+                # Sleep only if $i is greater than 0
+                if ($i -gt 0) {
+                    Start-Sleep -Seconds 1
+                } else {
+                    # On the last iteration, append the final message
+                    Write-Host " $waitTime second countdown complete."
+                }
             } else {
-                Write-Host "Game process stopped prematurely. Retrying in $retryInterval seconds..."
+                Write-Host "$global:gameProcessName" -ForegroundColor Green
+                Write-Host -NoNewLine " stopped prematurely. Retrying in $retryInterval seconds..."
                 Start-Sleep -Seconds $retryInterval
                 $retries++
                 break
             }
         }
 
-        if ($i -eq 0) {
+        if (Get-Process -Name $global:gameProcessName -ErrorAction SilentlyContinue) {
+            Write-Host -NoNewLine "$global:gameProcessName" -ForegroundColor Green
+            Write-Host " is running. Exiting countdown loop."
             return $true
+        } else {
+            Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
+            Write-Host " is not running. " -NoNewLine 
+            Write-Host "Retrying..." -ForegroundColor Yellow
         }
     }
 
-    Write-Host "Game process failed to start successfully after $maxRetries attempts." -ForegroundColor Red
+    Write-Host "$global:gameProcessName" -ForegroundColor Green -NoNewLine
+    Write-Host " failed to start successfully after $maxRetries attempts." -ForegroundColor Red
     pause
     exit
 }
 
-# 16
 Write-Host "Debug: Executing Launch-And-MonitorGame with path $global:gameProcessPath" -ForegroundColor Cyan
 $success = Launch-And-MonitorGame -gameProcessPath $global:gameProcessPath
 
@@ -208,7 +212,7 @@ if (-not $success) {
     exit
 }
 
-# 17
+# 8
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -222,7 +226,6 @@ public class User32 {
 }
 "@
 
-# 18
 function Get-ForegroundWindowTitle {
     $handle = [User32]::GetForegroundWindow()
     if ($handle -ne [IntPtr]::Zero) {
@@ -233,7 +236,6 @@ function Get-ForegroundWindowTitle {
     return $null
 }
 
-# 19
 function Get-WindowHandleByTitle {
     param (
         [string]$windowTitle
@@ -246,10 +248,8 @@ function Get-WindowHandleByTitle {
     return [IntPtr]::Zero
 }
 
-# 20
 $escKeyPressReps = 2
 
-# 21
 function Set-ForegroundWindowByGameProcess {
     param (
         [string]$gameProcessName
@@ -284,7 +284,6 @@ function Set-ForegroundWindowByGameProcess {
     }
 }
 
-# 22
 Write-Host "Confirming game process name: $global:gameProcessName" -ForegroundColor Cyan
 
 if (-not $global:gameProcessName) {
@@ -295,10 +294,8 @@ if (-not $global:gameProcessName) {
 
 Set-ForegroundWindowByGameProcess -gameProcessName $global:gameProcessName
 
-# 23
 Add-Type -AssemblyName 'System.Windows.Forms'
 
-# 24
 for ($i = 0; $i -lt $escKeyPressReps; $i++) {
     Start-Sleep -Milliseconds 250
     Write-Host "Simulating ESC key press..."
