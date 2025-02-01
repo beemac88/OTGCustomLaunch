@@ -131,10 +131,16 @@ if ($monitor) {
     # Set a flag indicating the presence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $true
 
-    # Launch OBS Studio
-    $obsPath = "C:\Program Files\obs-studio\bin\64bit"
-    Set-Location -Path $obsPath
-    Start-Process "C:\Program Files\obs-studio\bin\64bit\obs64.exe" --disable-shutdown-check
+    # Check if OBS is already running
+    if (-not (Get-Process -Name "obs64" -ErrorAction SilentlyContinue)) {
+        # Set the working directory to the OBS directory and launch OBS Studio
+        $obsPath = "C:\Program Files\obs-studio\bin\64bit"
+        Set-Location -Path $obsPath
+        Start-Process -FilePath "obs64.exe" -ArgumentList "--disable-shutdown-check"
+        Write-Host "OBS Studio launched successfully."
+    } else {
+        Write-Host "OBS Studio is already running."
+    }
     
 } else {
     # Set a flag indicating the absence of the AW3423DWF monitor
