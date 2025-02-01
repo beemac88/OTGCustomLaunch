@@ -131,15 +131,21 @@ if ($monitor) {
     # Set a flag indicating the presence of the AW3423DWF monitor
     $global:IsAW3423DWFMonitorPresent = $true
 
+    # Attempt to get the OBS installation path from the registry
+    $obsPath = (Get-ItemProperty -Path "HKLM:\SOFTWARE\OBS Studio" -Name "InstallPath" -ErrorAction SilentlyContinue).InstallPath
+    if (-not $obsPath) {
+        Write-Host "OBS Studio installation path not found in registry." -ForegroundColor Red
+        $obsPath = "C:\Program Files\obs-studio\bin\64bit" # Default fallback path
+    }
+
     # Check if OBS is already running
     if (-not (Get-Process -Name "obs64" -ErrorAction SilentlyContinue)) {
         # Set the working directory to the OBS directory and launch OBS Studio
-        $obsPath = "C:\Program Files\obs-studio\bin\64bit"
         Set-Location -Path $obsPath
         Start-Process -FilePath "obs64.exe" -ArgumentList "--disable-shutdown-check"
-        Write-Host "OBS Studio launched successfully."
+        Write-Host "OBS Studio" -ForegroundColor Green -NoNewline; Write-Host " launched successfully."
     } else {
-        Write-Host "OBS Studio is already running."
+        Write-Host "OBS Studio" -ForegroundColor Green -NoNewline; Write-Host " is already running."
     }
     
 } else {
