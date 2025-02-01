@@ -132,6 +132,7 @@ if ($monitor) {
     $global:IsAW3423DWFMonitorPresent = $true
 
     # Launch OBS Studio
+    $obsPath = "C:\Program Files\obs-studio\bin\64bit"
     Start-Process "C:\Program Files\obs-studio\bin\64bit\obs64.exe" --disable-shutdown-check
     
 } else {
