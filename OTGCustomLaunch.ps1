@@ -132,8 +132,11 @@ if ($monitor) {
     $global:IsAW3423DWFMonitorPresent = $true
 
     # Attempt to get the OBS installation path from the registry
-    $obsPath = (Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio" -Name "InstallLocation" -ErrorAction SilentlyContinue).InstallLocation
-    if (-not $obsPath) {
+    $obsPath = (Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\OBS Studio" -Name "DisplayIcon" -ErrorAction SilentlyContinue).DisplayIcon
+    if ($obsPath) {
+        $obsPath = [System.IO.Path]::GetDirectoryName($obsPath)
+        Write-Host "OBS Studio installation path found in registry: " -NoNewline; Write-Host $obsPath -ForegroundColor Green
+    } else {
         # If not found in the registry, look for a shortcut in the Start Menu
         $startMenuPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
         $obsShortcut = Get-ChildItem -Path $startMenuPath -Filter "*.lnk" -Recurse | Where-Object { $_.Name -like "*OBS Studio*" } | Select-Object -First 1
@@ -142,9 +145,11 @@ if ($monitor) {
             $wshShell = New-Object -ComObject WScript.Shell
             $shortcut = $wshShell.CreateShortcut($obsShortcut.FullName)
             $obsPath = [System.IO.Path]::GetDirectoryName($shortcut.TargetPath)
+            Write-Host "OBS Studio installation path found via Start Menu shortcut: " -NoNewline; Write-Host $obsPath -ForegroundColor Green
         } else {
             Write-Host "OBS Studio shortcut not found in Start Menu." -ForegroundColor Red
             $obsPath = "C:\Program Files\obs-studio\bin\64bit" # Default fallback path
+            Write-Host "Using default OBS Studio installation path: " -NoNewline; Write-Host $obsPath -ForegroundColor Green
         }
     }
 
