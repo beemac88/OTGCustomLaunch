@@ -133,6 +133,7 @@ if ($monitor) {
 
     # Launch OBS Studio
     $obsPath = "C:\Program Files\obs-studio\bin\64bit"
+    Set-Location -Path $obsPath
     Start-Process "C:\Program Files\obs-studio\bin\64bit\obs64.exe" --disable-shutdown-check
     
 } else {
